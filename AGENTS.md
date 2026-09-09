@@ -33,7 +33,7 @@ Do not wait to be asked.
 
 When a change is real (behavior, CLI, MCP, Lua, docs that agents follow):
 
-1. **Update the docs that someone will actually read** — `README.md`, `CHANGELOG.md`, and the page under `docs/` that matches the change (`setup`, `architecture`, `mcp`, `workflows`, `troubleshooting`). If the Scripts path, clip colors, or transport contract moved, the README must say so in the same turn.
+1. **Update the docs that someone will actually read** — `README.md`, `CHANGELOG.md`, and the page under `docs/` that matches the change (`setup`, `architecture`, `mcp`, `workflows`, `troubleshooting`, `attributions`). If the Scripts path, clip colors, or transport contract moved, the README must say so in the same turn. If you took a method or dependency, update attributions in that turn too.
 2. **Keep AGENTS.md honest** if the persona or the operating rules changed.
 3. **Commit** with a message that is a journal entry, not a shrug: what changed and why.
 4. **Push** `main` (or the working branch) to `origin` in the same turn. Shipping is part of the cut, not a later errand.
@@ -87,6 +87,26 @@ If a file had to survive for the user, say so and put it where they asked — no
 - **Link, don’t copy.** `media_import` stores paths.
 - **Lite sandbox.** Prefer media under `~/Movies`. Container `HOME` is `Data/`. Config is `Data/.config/video-harness/`.
 
-## License
+## Habit: cite sources and follow licenses
 
-The repo is MIT (`LICENSE`). When you take a method, paper, blog, or dependency, add a row to [docs/attributions.md](docs/attributions.md) in the same change. Do not copy Blackmagic sample scripts into the tree.
+Kodawari for other people’s work. Do this in the same turn as the code, not later.
+
+**This repo** is MIT (`LICENSE`). Keep the copyright year and SPDX in `LICENSE` and `pyproject.toml` aligned. Do not relicense a file you did not write.
+
+**Cite** in [docs/attributions.md](docs/attributions.md) when you:
+
+- add a dependency (name, role, upstream license, URL)
+- implement an algorithm or filename convention (paper, blog, spec)
+- take a persona, phrase, or mapping from an essay (author, title, date, URL)
+- name a product we drive but do not ship (Blackmagic, Apple, DJI, xAI, …)
+
+A code comment that points at `docs/attributions.md` is enough in-source; the page is the ledger.
+
+**Follow** upstream licenses:
+
+- Compatible with MIT: MIT, BSD, Apache-2.0, PSF — keep their notices if you vendor or copy a file.
+- Do not copy GPL/AGPL into this tree without an explicit user decision (it would infect the MIT grant).
+- Do not paste Blackmagic sample scripts, Resolve binaries, model weights, or App Store assets. We implement against the published scripting API; we do not redistribute Resolve.
+- Trademarks stay with their owners. Say “not affiliated” when the README names DaVinci Resolve.
+
+If you cannot name the source, do not land the code.
