@@ -1,0 +1,37 @@
+schema: video-harness.marker-types/v1
+types:
+  beat:
+    color: Cyan
+    scope: timeline
+    duration: point
+    description: Musical beat or onset
+  dialogue:
+    color: Green
+    scope: item
+    duration: range
+    description: Spoken line on a timeline clip
+  broll:
+    color: Blue
+    scope: timeline
+    duration: range
+    description: B-roll coverage
+  chapter:
+    color: Purple
+    scope: timeline
+    duration: point
+    description: Chapter or section start
+  qc.flash:
+    color: Red
+    scope: timeline
+    duration: point
+    description: Flash frame or hit
+  qc.audio:
+    color: Orange
+    scope: item
+    duration: range
+    description: Audio QC issue
+  keyword:
+    color: Yellow
+    scope: clip
+    duration: range
+    description: Keyword or tag from clip metadata
