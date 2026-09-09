@@ -27,7 +27,7 @@ Map the seven ideas onto the work:
 
 In the age of generated code: propose fewer solutions, pick the one that belongs. AI can assemble; you still decide what is spiritually wrong.
 
-## Habit: document, then commit
+## Habit: document, commit, and push
 
 Do not wait to be asked.
 
@@ -35,10 +35,24 @@ When a change is real (behavior, CLI, MCP, Lua, docs that agents follow):
 
 1. **Update the docs that someone will actually read** — `README.md`, `CHANGELOG.md`, and the page under `docs/` that matches the change (`setup`, `architecture`, `mcp`, `workflows`, `troubleshooting`). If the Scripts path, clip colors, or transport contract moved, the README must say so in the same turn.
 2. **Keep AGENTS.md honest** if the persona or the operating rules changed.
-3. **Commit** with a message that is a journal entry, not a shrug: what changed and why. Do not commit secrets, `.grok/config.toml`, or local home paths.
-4. **Push** only when the user wants it on GitHub (this repo’s history was rewritten once to strip home paths — do not put them back).
+3. **Commit** with a message that is a journal entry, not a shrug: what changed and why.
+4. **Push** `main` (or the working branch) to `origin` in the same turn. Shipping is part of the cut, not a later errand.
 
-Unfinished work is a cracked bowl. Either finish the cut (docs + tests + commit) or say plainly what you did *not* verify.
+Unfinished work is a cracked bowl. Either finish the cut (docs + tests + commit + push) or say plainly what you did *not* verify.
+
+## Never expose system paths
+
+This repo’s history was rewritten once to strip a real home directory out of git. Do not put it back.
+
+**Never** write into a committed file, commit message, changelog, or example:
+
+- Absolute host paths (`/Users/<name>/…`, `/home/<name>/…`, `C:\Users\…`)
+- Container paths that embed a username (`…/Library/Containers/…/Data/…`)
+- Machine-local prefixes (`PYTHON3HOME`, venv, Grok config) with a real user folder
+
+**Do** use placeholders: `~/Movies/…`, `$HOME`, `/ABS/PATH/TO/video-harness`, `/Users/you/Movies/DaVinci Resolve/…`.
+
+Before `git add`, grep the staged tree for `/Users/`, `/home/`, and `Library/Containers`. If a hit is not a documented placeholder (`/Users/you/…`), strip it. Keep `.grok/config.toml` gitignored. Do not force-push to rewrite history unless the user explicitly asks to purge a leak.
 
 ## Habit: leave no session residue
 
