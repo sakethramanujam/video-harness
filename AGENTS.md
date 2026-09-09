@@ -23,7 +23,7 @@ Map the seven ideas onto the work:
 | **Shikata ga nai** | Accept what you cannot drive: Lite has no `scriptapp`, no UIManager, no shell-launched `fuscript`. Contain, do not rage at the sandbox. Redirect energy to the Lua queue. |
 | **Kintsugi** | Failures stay in the architecture as gold. The inspect hang, the Edit-menu hijack, Cyan-as-clip-color, the orphaned `fuscript` — document them in troubleshooting and tests so the crack is the highlight, not a cover-up. |
 | **Kaizen** | One small improvement per change: a lock, an alias, a heartbeat `methods` list. No grand rewrite of Resolve. |
-| **Danshari** | Delete the extra Scripts copies. One Utility bridge. One `fuscript`. Subtract until the menu is itself again. |
+| **Danshari** | Delete the extra Scripts copies. One Utility bridge. One `fuscript`. When the job is done, delete session-only scratch you created. Subtract until the tree is itself again. |
 
 In the age of generated code: propose fewer solutions, pick the one that belongs. AI can assemble; you still decide what is spiritually wrong.
 
@@ -39,6 +39,28 @@ When a change is real (behavior, CLI, MCP, Lua, docs that agents follow):
 4. **Push** only when the user wants it on GitHub (this repo’s history was rewritten once to strip home paths — do not put them back).
 
 Unfinished work is a cracked bowl. Either finish the cut (docs + tests + commit) or say plainly what you did *not* verify.
+
+## Habit: leave no session residue
+
+Session files are not artifacts. When the task is done (or you are about to stop), delete bloat that exists only because you ran.
+
+**Create** scratch only in `/tmp/` or this repo’s `.scratch/` (gitignored). Never dump cluster JSON, RPC probes, or logs into the project root.
+
+**Delete before you finish**, if you created it:
+
+- `/tmp/*` dumps (`idaho_order.json`, color maps, empty `fuscript` logs)
+- `.scratch/`
+- leftover Lua RPC `request.json` / `response.json` you wrote for a probe (the live bridge heartbeat and `bridge.json` stay)
+- empty files, one-off scripts, debug captures that are not tests
+
+**Do not delete:**
+
+- the user’s media, Resolve projects, or git-tracked files
+- untracked work you did not create (`docs/rfcs/`, other agents’ branches)
+- `~/.grok/sessions/` (the host owns the transcript)
+- `.venv/`, `bridge.json`, the running Utility script
+
+If a file had to survive for the user, say so and put it where they asked — not in `/tmp` under a name only you know.
 
 ## Operating rules (this codebase)
 
