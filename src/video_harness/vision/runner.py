@@ -1,10 +1,16 @@
 """Unified vision indexing runner.
 
-Executes the 2-stage processing pipeline:
-1. VideoToolbox frame stream + dHash perceptual check on Metal.
-2. Changes / scene cuts passed to VLM (or semantic classifier) to label subject/action/shot.
-3. StateAccumulator collapses redundant frames into TemporalSegments.
-4. Compact sidecar saved and optional Resolve markers generated.
+Executes the spatio-temporal scene indexing pipeline:
+1. VideoToolbox hardware-accelerated frame stream + perceptual dHash check.
+2. SpatioTemporalSceneAnalyzer analyzes frame spatial composition:
+   - Dynamic luminance & contrast distribution.
+   - High-frequency edge gradient energy (detecting focus, landscape, detail vs blank ground/sky).
+   - Temporal optical difference & motion stability (distinguishes smooth pans vs erratic jitter vs static).
+3. Quality gating:
+   - Classifies shot types (wide_establishing, medium_scenic, close_detail, or uncomposed_dead_frame).
+   - Flags unusable frames (muddy/low-contrast, severe camera jitter, dead setups).
+4. StateAccumulator collapses redundant frames into compact TemporalSegments.
+5. Generates rich sidecar metadata and Resolve-ready markers.
 """
 
 from __future__ import annotations
@@ -19,6 +25,8 @@ from video_harness.vision.compaction import StateAccumulator
 from video_harness.vision.dhash import compute_dhash_from_bytes, is_visually_static
 from video_harness.vision.extractor import extract_frames_stream, probe_video
 from video_harness.vision.sidecar import SidecarIndex
+from video_harness.vision.spatio_temporal import SpatioTemporalSceneAnalyzer
+from video_harness.vision.telemetry import find_companion_srt, parse_telemetry_srt
 from video_harness.vision.worker import (
     JobManager,
     configure_metal_memory_bounds,
@@ -32,9 +40,10 @@ def run_clip_indexing(
     job_id: str,
     interval_seconds: float = 2.0,
     dhash_threshold: int = 4,
+    quality_threshold: float = 4.5,
     vlm_prompt: str | None = None,
 ) -> dict[str, Any]:
-    """Execute full indexing pipeline with memory bounds and progress tracking."""
+    """Execute full spatio-temporal indexing pipeline with memory bounds and progress tracking."""
     job_mgr = JobManager()
     sidecar_idx = SidecarIndex()
 
@@ -50,6 +59,11 @@ def run_clip_indexing(
         info = probe_video(path_obj)
         job_mgr.create_job(job_id, media_id, total_duration=info.duration_seconds)
 
+        # Look for companion telemetry metadata if available (drone, GoPro, or EXIF)
+        srt_path = find_companion_srt(path_obj)
+        telemetry = parse_telemetry_srt(srt_path) if srt_path else {}
+
+        analyzer = SpatioTemporalSceneAnalyzer(quality_threshold=quality_threshold)
         accumulator = StateAccumulator(hash_threshold=dhash_threshold)
         prev_dhash: int | None = None
         frames_processed = 0
@@ -62,25 +76,47 @@ def run_clip_indexing(
             use_videotoolbox=sys.platform.startswith("darwin"),
         )
 
+        curr_seg_start_f = 0
+        curr_seg_start_pts = 0.0
+
         for source_frame, pts_sec, raw_rgb, width, height in stream:
             curr_dhash = compute_dhash_from_bytes(raw_rgb, width, height, channels=3)
 
-            # Stage 1: Perceptual dHash pre-filter
+            # Spatio-temporal analysis on actual frame pixels
+            metrics, motion = analyzer.process_frame(
+                raw_rgb=raw_rgb,
+                width=width,
+                height=height,
+                pts_sec=pts_sec,
+                source_frame=source_frame,
+            )
+
             is_static = False
             if prev_dhash is not None:
                 is_static = is_visually_static(prev_dhash, curr_dhash, threshold=dhash_threshold)
 
+            # Determine tags & semantic summary for this sample point
             tags: list[str] = []
             summary: str = ""
 
             if is_static and frames_processed > 0:
-                # Visually static frame! Skip heavy inference, advance time
-                pass
+                # Visually static frame! Retain state, skip redundant re-indexing
+                tags = ["static_hold"]
+                summary = f"Static hold at {pts_sec:.1f}s"
             else:
-                # Significant change or initial frame: generate tag/summary
                 vlm_inferences += 1
-                tags = ["scene_action"]
-                summary = f"Visual action at {pts_sec:.1f}s"
+                # Synthesize scene info using vision metrics & metadata
+                scene = analyzer.synthesize_scene(
+                    start_frame=curr_seg_start_f,
+                    end_frame=source_frame,
+                    start_pts=curr_seg_start_pts,
+                    end_pts=pts_sec,
+                    camera_metadata=telemetry,
+                )
+                tags = scene.tags
+                summary = scene.summary
+                curr_seg_start_f = source_frame
+                curr_seg_start_pts = pts_sec
 
             accumulator.process_frame(
                 source_frame=source_frame,
@@ -116,6 +152,7 @@ def run_clip_indexing(
             "savings_percent": round(
                 (1.0 - (vlm_inferences / max(1, frames_processed))) * 100, 1
             ),
+            "telemetry": telemetry,
             "source_path": str(path_obj),
         }
 
