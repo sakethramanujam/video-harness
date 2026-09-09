@@ -31,7 +31,7 @@ Keep Resolve + the Lua bridge running. The MCP process does not start Resolve.
 |---|---|
 | `doctor` | Paths, `scriptapp`, HTTP bridge, Lua heartbeat |
 | `reconnect` | Drop cached session, connect again |
-| `inspect` | App, project, current timeline, media pool (`media=current\|all`) |
+| `inspect` | App, project, current timeline, media pool (`media=current\|all\|none`) |
 | `type_registry_get` | Marker types from `types.yaml` |
 | `media_import` | `ImportMedia` on file **or folder** paths |
 | `timeline_ensure` | Create or switch timeline (idempotent) |
@@ -43,10 +43,13 @@ Keep Resolve + the Lua bridge running. The MCP process does not start Resolve.
 | `markers_from_metadata` | Map `{type, at, ...}` events (and optional clip metadata) to upserts |
 | `markers_clear` | Delete by id / frame / color (Python runtime only) |
 | `clip_metadata_get` | Pool-item metadata (Python runtime only) |
+| `clip_set_color` | Timeline item clip color (Lua + Python). Empty color clears. |
 
 Resources: `resolve://status`, `resolve://timeline`, `resolve://types`.
 
-On the **Lua** transport, tools that are “Python runtime only” fail. Stick to inspect / import / ensure / place / marker_upsert / markers_from_metadata.
+On the **Lua** transport, tools that are “Python runtime only” fail. Stick to inspect / import / ensure / place / `clip_set_color` / marker_upsert / markers_from_metadata.
+
+`clip_set_color` valid names: Orange, Apricot, Yellow, Lime, Olive, Green, Teal, Navy, Blue, Purple, Violet, Pink, Tan, Beige, Brown, Chocolate. Aliases: Cyan→Teal, Mint→Lime, Red→Violet. Parallel color calls are serialized by the client lock.
 
 ## Prompts that work
 
@@ -73,10 +76,10 @@ Mark:
 
 Rules to give the agent (or rely on tool docs):
 
-- Call `inspect` before mutating.
+- Call `inspect` before mutating. Use `media=none` when you only need the timeline.
 - Prefer `timeline_ensure` over ad-hoc create.
 - Pass **absolute** paths Resolve can read (Movies is safest on App Store Lite).
-- One running bridge script. Do not tell the user to click Scripts repeatedly.
+- One running **Utility** bridge. After `install-bridge`, one re-click. Two `fuscript` PIDs race. Do not launch `fuscript` from a terminal on Lite.
 
 ## CLI equivalents
 

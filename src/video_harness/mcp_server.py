@@ -78,7 +78,7 @@ def reconnect() -> str:
 def inspect(media: str = "current") -> str:
     """Snapshot of app, project, current timeline (tracks, items, markers), and media pool.
 
-    media: 'current' (current bin) or 'all' (entire pool).
+    media: 'current' (current bin), 'all' (entire pool), or 'none' (timeline only, faster).
     """
     try:
         return _ok(get_harness().inspect(media=media))
@@ -170,8 +170,11 @@ def clip_set_color(
     media_id: str | None = None,
     clip_name: str | None = None,
 ) -> str:
-    """Set Resolve clip color on timeline items (Orange, Green, Blue, …). Empty color clears.
+    """Set Resolve clip color on timeline items. Empty color clears.
 
+    Valid: Orange, Apricot, Yellow, Lime, Olive, Green, Teal, Navy, Blue,
+    Purple, Violet, Pink, Tan, Beige, Brown, Chocolate.
+    Aliases (marker names): Cyan→Teal, Mint→Lime, Red→Violet.
     Match by unique_ids, media_id, or clip_name. If none given, colors every video/audio item.
     """
     params: dict[str, Any] = {"color": color}

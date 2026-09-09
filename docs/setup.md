@@ -60,7 +60,7 @@ video-harness install-bridge
 Then:
 
 1. Open DaVinci Resolve and a project.
-2. **Workspace → Scripts → Utility → video_harness_bridge** (or **Edit → video_harness_bridge**). Click **once**.
+2. **Workspace → Scripts → Utility → video_harness_bridge**. Click **once**.
 3. No window. No “limitation” dialog. That is expected (see below).
 4. `video-harness doctor` — you want `"bridge": { "ok": true, "transport": "lua-file" }`.
 

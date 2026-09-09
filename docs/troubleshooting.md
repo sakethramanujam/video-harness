@@ -17,13 +17,13 @@ Normal on free. Use the in-app Lua bridge. Studio: set **Preferences → General
 The Lua script is not looping.
 
 - Project must be open.
-- **Workspace → Scripts → Utility → video_harness_bridge** (or Edit), **once**.
+- **Workspace → Scripts → Utility → video_harness_bridge**, **once**.
 - `doctor` `resolve_process.matches` should include `fuscript ... video_harness_bridge.lua`.
 - Log: Lite container `Data/.config/video-harness/bridge.log`, else `~/.config/video-harness/bridge.log`.
 
 ## Scripts menu has Comp / Edit / Color / Deliver but no script
 
-Those names are **folders**, not your file. Open **Edit** or **Utility**.
+Those names are **folders**, not your file. The bridge lives in **Utility**.
 
 If the `.lua` file still is not listed:
 
@@ -37,6 +37,10 @@ If the `.lua` file still is not listed:
 Headless Lua has **no window**. Open **Workspace → Console** for prints. `doctor` heartbeat `ok: true` means it is running.
 
 Several `fuscript ... video_harness_bridge.lua` PIDs means multiple clicks. They race. Quit extras (or Cmd+Q Resolve) and click **once**.
+
+## Scripts → Edit is the bridge / two `video_harness_bridge` entries
+
+Older `install-bridge` copied the Lua file into **Edit** and **Comp** as well as Utility, so those Scripts menus showed a second copy. Current install keeps it in **Utility** only and deletes the extras. Run `video-harness install-bridge` again if Edit/Comp still list it.
 
 ## “You have reached a limitation with DaVinci Resolve”
 
@@ -82,7 +86,19 @@ There is no `LinkProxyMedia` tool yet. Importing proxy files makes **new clips**
 
 ## After `install-bridge`, behavior unchanged
 
-Running Lua is the old in-memory copy. Click the script again (only one instance).
+Running Lua is the old in-memory copy. Click the script again (only one instance). `doctor` fails fast when the heartbeat has no `methods` list (CLI 0.1.1+). Do **not** start `fuscript` from a terminal on App Store Lite — it is sandboxed and will SIGTRAP (`Process is not in an inherited sandbox`).
+
+## `inspect` hung / “Lua bridge did not answer in time” after a large import
+
+The Lua JSON encoder used to emit raw control characters from clip metadata, and the client spun until timeout. 0.1.1 escapes those characters and parses with `strict=False`. Prefer `inspect` `media=none` when you only need the timeline.
+
+## Parallel MCP calls failed with `request.json.tmp` FileNotFoundError
+
+The Lua queue is one `request.json`. 0.1.1 takes a process+thread lock so concurrent `clip_set_color` / `inspect` calls wait instead of clobbering the file.
+
+## `SetClipColor` returned success false / colors did not stick
+
+Timeline clip colors are **not** marker colors. Cyan, Mint, and Red are invalid. Use Orange, Apricot, Yellow, Lime, Olive, Green, Teal, Navy, Blue, Purple, Violet, Pink, Tan, Beige, Brown, Chocolate. Aliases: Cyan→Teal, Mint→Lime, Red→Violet. The harness maps those aliases before calling Resolve.
 
 ## Confirm App Store vs website (macOS)
 

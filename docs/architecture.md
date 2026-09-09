@@ -43,9 +43,11 @@ IPC:
 
 | Role | Path |
 |---|---|
-| Token + heartbeat | `<config>/bridge.json`, `<config>/bridge-heartbeat.json` |
-| RPC | `<config>/rpc/request.json` → `response.json` |
+| Token + heartbeat | `<config>/bridge.json`, `<config>/bridge-heartbeat.json` (`methods` + `bridge` version) |
+| RPC | `<config>/rpc/request.json` → `response.json` (clients lock; one in flight) |
 | Log | `<config>/bridge.log` |
+
+`install-bridge` copies Lua to **Utility** only. Edit/Comp copies hijack those Scripts menus; the installer deletes them. Heartbeat without `methods` means RAM is older than disk — re-click Utility.
 
 `<config>` is:
 

@@ -20,7 +20,7 @@ source .venv/bin/activate
 video-harness doctor
 ```
 
-You want `"bridge": { "ok": true }`.
+You want `"bridge": { "ok": true, "bridge": "0.1.1" }` and `set_clip_color` in `methods`. After `install-bridge`, click Utility once more.
 
 ## 2. Register the MCP in Grok
 

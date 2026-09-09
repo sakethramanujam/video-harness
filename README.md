@@ -1,8 +1,10 @@
 # video-harness
 
-DaVinci Resolve harness and MCP server for **timeline placement**, **folder import**, and **typed metadata markers**.
+DaVinci Resolve harness and MCP server for **timeline placement**, **folder import**, **clip color**, and **typed metadata markers**.
 
-It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, mark.
+It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, color, mark.
+
+Current release: **0.1.1** — see [CHANGELOG](CHANGELOG.md). Agents (any model) read [AGENTS.md](AGENTS.md).
 
 ## Docs
 
@@ -28,9 +30,10 @@ video-harness doctor
 ```
 
 1. Open Resolve and a project.
-2. **Workspace → Scripts → Utility → video_harness_bridge** (click **once**). No window — that is expected.
-3. `video-harness doctor` → `"bridge": { "ok": true }`.
-4. `video-harness inspect`.
+2. **Workspace → Scripts → Utility → video_harness_bridge** (click **once**). No window — that is expected. Do not use Scripts → Edit (that menu is for Edit-page scripts).
+3. `video-harness doctor` → `"bridge": { "ok": true, "bridge": "0.1.1" }` and a `methods` list that includes `set_clip_color`.
+4. After every `install-bridge`, click Utility **once more** so RAM matches disk. Two `fuscript` PIDs race — stop extras; never start `fuscript` from a shell on App Store Lite.
+5. `video-harness inspect` (use MCP `media=none` when you only need the timeline).
 
 App Store (“Lite”) vs website install: see [Setup](docs/setup.md). Lite is sandboxed; the website free build is the better $0 option.
 
@@ -56,7 +59,7 @@ Free editions cannot be driven from an external `scriptapp`. The Lua script runs
 }
 ```
 
-Example: *Import `/Users/you/Movies/DaVinci Resolve/Proxy` and assemble timeline `Proxy_Cut`.*
+Example: *Import `/Users/you/Movies/DaVinci Resolve/Proxy` and assemble timeline `Proxy_Cut`.* Color-code with `clip_set_color` (Cyan→Teal, Mint→Lime, Red→Violet; see [workflows](docs/workflows.md)).
 
 Full tool list and prompts: [MCP and agents](docs/mcp.md).
 
@@ -70,11 +73,13 @@ Full tool list and prompts: [MCP and agents](docs/mcp.md).
 ## Layout
 
 ```
+AGENTS.md                            persona + document-and-commit habit
 src/video_harness/
   types.yaml                         marker type → color / scope
-  harness.py                         inspect / import / place / mark
+  clip_colors.py                     timeline clip colors + aliases
+  harness.py                         inspect / import / place / color / mark
   session.py                         direct | HTTP | Lua
-  scripts/video_harness_bridge.lua   in-app listener (free)
+  scripts/video_harness_bridge.lua   in-app listener (Utility only)
   scripts/vh_runtime.py              Python Resolve ops (Studio)
   mcp_server.py
 ```

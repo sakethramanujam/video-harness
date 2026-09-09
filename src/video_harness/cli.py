@@ -130,6 +130,11 @@ def _scripts_python_status() -> dict[str, Any]:
 def _doctor_next(report: dict[str, Any]) -> list[str]:
     steps: list[str] = []
     bridge = report.get("bridge") or {}
+    lua = str(bridge.get("lua") or "")
+    if "methods" in lua.lower() or "older than this cli" in lua.lower():
+        steps.append(
+            "Running Lua is older than this CLI. Re-click Workspace > Scripts > Utility > video_harness_bridge (one instance)."
+        )
     if bridge.get("ok"):
         return ["Bridge is up. video-harness inspect"]
     if not report.get("bridge_script"):
@@ -145,7 +150,7 @@ def _doctor_next(report: dict[str, Any]) -> list[str]:
     if not report.get("resolve_process", {}).get("running"):
         steps.append("Open DaVinci Resolve and a project.")
     steps.append(
-        "Workspace > Scripts > Edit > video_harness_bridge  (Lua — Python .py files stay hidden until Resolve finds Python)."
+        "Workspace > Scripts > Utility > video_harness_bridge  (Lua — Python .py files stay hidden until Resolve finds Python)."
     )
     steps.append("video-harness doctor   # bridge.ok should become true")
     return steps
@@ -297,17 +302,26 @@ def cmd_install_bridge(args: argparse.Namespace) -> int:
     copied_lua = []
     from video_harness.paths import lite_container_data, resolve_script_roots
 
+    removed_lua: list[str] = []
     if lua_src.is_file():
         for scripts_root in resolve_script_roots():
-            for folder in ("Utility", "Edit", "Comp"):
-                target_dir = scripts_root / folder
-                try:
-                    target_dir.mkdir(parents=True, exist_ok=True)
-                    target = target_dir / "video_harness_bridge.lua"
-                    shutil.copy2(lua_src, target)
-                    copied_lua.append(str(target))
-                except OSError:
-                    continue
+            utility = scripts_root / "Utility"
+            try:
+                utility.mkdir(parents=True, exist_ok=True)
+                target = utility / "video_harness_bridge.lua"
+                shutil.copy2(lua_src, target)
+                copied_lua.append(str(target))
+            except OSError:
+                pass
+            # Older installs copied into Edit/Comp and hijacked those Scripts menus.
+            for folder in ("Edit", "Comp", "Color", "Fairlight", "Deliver"):
+                stray = scripts_root / folder / "video_harness_bridge.lua"
+                if stray.is_file():
+                    try:
+                        stray.unlink()
+                        removed_lua.append(str(stray))
+                    except OSError:
+                        continue
 
     cfg_dir = config_dir()
     cfg_dir.mkdir(parents=True, exist_ok=True)
@@ -338,10 +352,13 @@ def cmd_install_bridge(args: argparse.Namespace) -> int:
                 str(dest / "vh_runtime.py"),
                 *copied_lua,
             ],
+            "removed": removed_lua,
             "config": str(cfg_path),
             "port": port,
             "next": [
-                "Workspace > Scripts > Edit > video_harness_bridge  (Lua; always listed).",
+                "If the Lua bridge is already running, click it again (one instance) so it loads this copy.",
+                "Do not launch fuscript from a terminal on App Store Lite — Resolve will crash it.",
+                "Workspace > Scripts > Utility > video_harness_bridge  (Lua; always listed).",
                 "Leave it running, then: video-harness doctor",
             ],
             "python_note": python_note,

@@ -124,6 +124,18 @@ class FakeItem:
     def GetClipColor(self) -> str:
         return self.color
 
+    def SetClipColor(self, color: str) -> bool:
+        from video_harness.clip_colors import CLIP_COLORS
+
+        if color not in CLIP_COLORS:
+            return False
+        self.color = color
+        return True
+
+    def ClearClipColor(self) -> bool:
+        self.color = ""
+        return True
+
     def GetMediaPoolItem(self) -> FakeMedia:
         return self.media
 

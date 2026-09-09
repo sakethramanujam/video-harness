@@ -1,6 +1,6 @@
 [project]
 name = "video-harness"
-version = "0.1.0"
+version = "0.1.1"
 description = "DaVinci Resolve harness and MCP server for timeline placement and typed metadata markers."
 readme = "README.md"
 requires-python = ">=3.10"

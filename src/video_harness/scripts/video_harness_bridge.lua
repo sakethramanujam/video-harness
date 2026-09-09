@@ -1,6 +1,6 @@
 --[[
   video_harness_bridge.lua
-  Launch from: Workspace > Scripts > Edit > video_harness_bridge
+  Launch from: Workspace > Scripts > Utility > video_harness_bridge
   (Lua always lists. Python .py files stay hidden until Resolve finds Python.)
 
   File-queue RPC: ~/.config/video-harness/rpc/request.json -> response.json
@@ -8,7 +8,16 @@
 ]]
 
 local MARKER_SCHEMA = "video-harness.marker/v1"
-local BRIDGE_VERSION = "0.1.0"
+local BRIDGE_VERSION = "0.1.1"
+local METHOD_NAMES = {
+    "ping",
+    "inspect",
+    "import_media",
+    "ensure_timeline",
+    "place",
+    "marker_upsert",
+    "set_clip_color",
+}
 
 local function home_dir()
     return os.getenv("HOME") or os.getenv("USERPROFILE") or "."
@@ -83,7 +92,11 @@ end
 
 -- Minimal JSON (objects, arrays, strings, numbers, bool, null)
 local function json_escape(s)
+    s = tostring(s)
     s = s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
+    s = s:gsub("[%z\1-\31]", function(c)
+        return string.format("\\u%04x", string.byte(c))
+    end)
     return '"' .. s .. '"'
 end
 
@@ -438,7 +451,10 @@ local function sval(v)
     if v == nil then
         return ""
     end
-    return tostring(v)
+    local s = tostring(v)
+    -- Strip leftover control chars so inspect JSON stays strict.
+    s = s:gsub("[%z\1-\8\11\12\14-\31]", " ")
+    return s
 end
 
 local function clip_prop(clip, key)
@@ -513,12 +529,12 @@ local function inspect_timeline(tl)
                     return item:GetMediaPoolItem()
                 end)
                 items_out[#items_out + 1] = {
-                    name = safe(function()
+                    name = sval(safe(function()
                         return item:GetName()
-                    end),
-                    unique_id = safe(function()
+                    end)),
+                    unique_id = sval(safe(function()
                         return item:GetUniqueId()
-                    end),
+                    end)),
                     start = safe(function()
                         return item:GetStart()
                     end),
@@ -534,16 +550,16 @@ local function inspect_timeline(tl)
                     source_end = safe(function()
                         return item:GetSourceEndFrame()
                     end),
-                    color = safe(function()
+                    color = sval(safe(function()
                         return item:GetClipColor()
-                    end) or "",
-                    media_id = mp and safe(function()
+                    end)),
+                    media_id = mp and sval(safe(function()
                         return mp:GetMediaId()
-                    end) or nil,
-                    media_name = mp and safe(function()
+                    end)) or nil,
+                    media_name = mp and sval(safe(function()
                         return mp:GetName()
-                    end) or nil,
-                    path = mp and clip_path(mp) or "",
+                    end)) or nil,
+                    path = mp and sval(clip_path(mp)) or "",
                     markers = serialize_markers(safe(function()
                         return item:GetMarkers()
                     end, {})),
@@ -602,6 +618,7 @@ local function ping(r)
         end),
         bridge = BRIDGE_VERSION,
         transport = "lua-file",
+        methods = METHOD_NAMES,
     }
 end
 
@@ -643,37 +660,43 @@ local function inspect(r, params)
     local pool = safe(function()
         return proj:GetMediaPool()
     end)
+    local media_mode = params.media or "current"
     if pool then
         local current = safe(function()
             return pool:GetCurrentFolder()
         end)
-        local root = safe(function()
-            return pool:GetRootFolder()
-        end)
-        local clips = {}
-        local folders = {}
-        if params.media == "all" and root then
-            folders = iter_folders(root)
-        elseif current then
-            folders = { current }
-        elseif root then
-            folders = { root }
-        end
-        for _, folder in ipairs(folders) do
-            local list = safe(function()
-                return folder:GetClipList()
-            end, {}) or {}
-            for _, clip in pairs(list) do
-                clips[#clips + 1] = inspect_clip(clip, true)
+        local folder_name = current and safe(function()
+            return current:GetName()
+        end) or nil
+        if media_mode == "none" then
+            result.media = { current_folder = folder_name, clip_count = 0, clips = {} }
+        else
+            local root = safe(function()
+                return pool:GetRootFolder()
+            end)
+            local clips = {}
+            local folders = {}
+            if media_mode == "all" and root then
+                folders = iter_folders(root)
+            elseif current then
+                folders = { current }
+            elseif root then
+                folders = { root }
             end
+            for _, folder in ipairs(folders) do
+                local list = safe(function()
+                    return folder:GetClipList()
+                end, {}) or {}
+                for _, clip in pairs(list) do
+                    clips[#clips + 1] = inspect_clip(clip, true)
+                end
+            end
+            result.media = {
+                current_folder = folder_name,
+                clip_count = #clips,
+                clips = clips,
+            }
         end
-        result.media = {
-            current_folder = current and safe(function()
-                return current:GetName()
-            end) or nil,
-            clip_count = #clips,
-            clips = clips,
-        }
     end
     return result
 end
@@ -913,8 +936,70 @@ local function marker_upsert(r, params)
     return { markers = results, count = #results }
 end
 
+local CLIP_COLORS = {
+    Orange = true,
+    Apricot = true,
+    Yellow = true,
+    Lime = true,
+    Olive = true,
+    Green = true,
+    Teal = true,
+    Navy = true,
+    Blue = true,
+    Purple = true,
+    Violet = true,
+    Pink = true,
+    Tan = true,
+    Beige = true,
+    Brown = true,
+    Chocolate = true,
+}
+local CLIP_COLOR_ALIASES = {
+    Cyan = "Teal",
+    Mint = "Lime",
+    Red = "Violet",
+    Crimson = "Violet",
+    Sky = "Navy",
+    Fuchsia = "Pink",
+    Magenta = "Pink",
+    Lemon = "Yellow",
+    Lavender = "Purple",
+    Rose = "Pink",
+    Sand = "Tan",
+    Cocoa = "Chocolate",
+    Cream = "Beige",
+    White = "Beige",
+}
+
+local function resolve_clip_color(color)
+    if color == nil or color == "" then
+        return ""
+    end
+    color = tostring(color)
+    if CLIP_COLORS[color] then
+        return color
+    end
+    local lower = string.lower(color)
+    for name, _ in pairs(CLIP_COLORS) do
+        if string.lower(name) == lower then
+            return name
+        end
+    end
+    for src, dst in pairs(CLIP_COLOR_ALIASES) do
+        if string.lower(src) == lower then
+            return dst
+        end
+    end
+    fail(
+        "Invalid clip color '"
+            .. color
+            .. "'. Valid: Orange, Apricot, Yellow, Lime, Olive, Green, Teal, Navy, Blue, Purple, Violet, Pink, Tan, Beige, Brown, Chocolate. Aliases: Cyan→Teal, Mint→Lime, Red→Violet.",
+        "PlacementError"
+    )
+end
+
 local function set_clip_color(r, params)
-    local color = params.color
+    local color = resolve_clip_color(params.color)
     local _, _, tl = timeline_of(r)
     local unique_ids = params.unique_ids or {}
     local media_id = params.media_id
@@ -991,7 +1076,14 @@ local METHODS = {
 local function dispatch(r, method, params)
     local fn = METHODS[method]
     if not fn then
-        return { ok = false, error = { type = "UnknownMethod", message = "Unknown method '" .. tostring(method) .. "'." } }
+        return {
+            ok = false,
+            error = {
+                type = "UnknownMethod",
+                message = "Unknown method '" .. tostring(method) .. "'.",
+                fix = "install-bridge copies a newer Lua file; re-click Workspace > Scripts > Utility > video_harness_bridge (one instance) so the running script reloads. Do not launch fuscript from a terminal on App Store Lite.",
+            },
+        }
     end
     local ok, result = pcall(fn, r, params or {})
     if not ok then
@@ -1009,6 +1101,7 @@ local function heartbeat(r)
         ts = os.time(),
         bridge = BRIDGE_VERSION,
         transport = "lua-file",
+        methods = METHOD_NAMES,
         product = r and safe(function()
             return r:GetProductName()
         end) or nil,

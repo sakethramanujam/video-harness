@@ -5,6 +5,40 @@ import traceback
 
 MARKER_SCHEMA = "video-harness.marker/v1"
 VALID_TRACKS = ("video", "audio", "subtitle")
+CLIP_COLORS = (
+    "Orange",
+    "Apricot",
+    "Yellow",
+    "Lime",
+    "Olive",
+    "Green",
+    "Teal",
+    "Navy",
+    "Blue",
+    "Purple",
+    "Violet",
+    "Pink",
+    "Tan",
+    "Beige",
+    "Brown",
+    "Chocolate",
+)
+CLIP_COLOR_ALIASES = {
+    "Cyan": "Teal",
+    "Mint": "Lime",
+    "Red": "Violet",
+    "Crimson": "Violet",
+    "Sky": "Navy",
+    "Fuchsia": "Pink",
+    "Magenta": "Pink",
+    "Lemon": "Yellow",
+    "Lavender": "Purple",
+    "Rose": "Pink",
+    "Sand": "Tan",
+    "Cocoa": "Chocolate",
+    "Cream": "Beige",
+    "White": "Beige",
+}
 
 
 class Fail(Exception):
@@ -33,6 +67,27 @@ def safe(fn, default=None):
         return value
     except Exception:
         return default
+
+
+def _normalize_clip_color(color):
+    if color is None:
+        return ""
+    text = str(color).strip()
+    if text == "":
+        return ""
+    key = text.lower()
+    for name in CLIP_COLORS:
+        if name.lower() == key:
+            return name
+    for src, dst in CLIP_COLOR_ALIASES.items():
+        if src.lower() == key:
+            return dst
+    raise Fail(
+        "Invalid clip color '%s'. Valid: %s. Aliases: Cyan→Teal, Mint→Lime, Red→Violet."
+        % (color, ", ".join(CLIP_COLORS)),
+        type="PlacementError",
+        state={"color": color, "valid": list(CLIP_COLORS)},
+    )
 
 
 def json_safe(value):
@@ -166,6 +221,7 @@ def ping(resolve, params=None):
         "product": safe(lambda: resolve.GetProductName()),
         "version": safe(lambda: resolve.GetVersionString()),
         "page": safe(lambda: resolve.GetCurrentPage()),
+        "methods": list(METHODS.keys()),
     }
 
 
@@ -193,7 +249,16 @@ def inspect(resolve, params=None):
     if tl:
         result["timeline"] = _inspect_timeline(tl, include_item_markers=params.get("item_markers", True))
     media_mode = params.get("media", "current")
-    result["media"] = _inspect_media(proj, recurse=media_mode == "all")
+    if media_mode in ("none", False, None):
+        pool = safe(lambda: proj.GetMediaPool())
+        current = safe(lambda: pool.GetCurrentFolder()) if pool else None
+        result["media"] = {
+            "current_folder": safe(lambda: current.GetName()) if current else None,
+            "clip_count": 0,
+            "clips": [],
+        }
+    else:
+        result["media"] = _inspect_media(proj, recurse=media_mode == "all")
     return result
 
 
@@ -628,6 +693,44 @@ def markers_clear(resolve, params=None):
     raise Fail("Provide id, frame, or color to clear markers.", type="MarkerError")
 
 
+def set_clip_color(resolve, params=None):
+    params = params or {}
+    color = _normalize_clip_color(params.get("color"))
+    _, _, tl = _timeline(resolve)
+    unique_ids = params.get("unique_ids") or []
+    media_id = params.get("media_id")
+    clip_name = params.get("clip_name") or params.get("name")
+    changed = []
+    for track_type in ("video", "audio"):
+        count = int(safe(lambda t=track_type: tl.GetTrackCount(t), 0) or 0)
+        for index in range(1, count + 1):
+            items = safe(lambda t=track_type, i=index: tl.GetItemListInTrack(t, i), []) or []
+            for item in items:
+                uid = safe(lambda it=item: it.GetUniqueId()) or ""
+                mp = safe(lambda it=item: it.GetMediaPoolItem())
+                mid = safe(lambda m=mp: m.GetMediaId()) if mp else ""
+                iname = safe(lambda it=item: it.GetName()) or ""
+                match = False
+                if unique_ids:
+                    match = uid in unique_ids
+                elif media_id and media_id == mid:
+                    match = True
+                elif clip_name and clip_name == iname:
+                    match = True
+                elif not unique_ids and not media_id and not clip_name:
+                    match = True
+                if not match:
+                    continue
+                if color:
+                    ok = item.SetClipColor(color)
+                else:
+                    ok = item.ClearClipColor()
+                changed.append({"unique_id": uid, "name": iname, "color": color or "", "success": bool(ok)})
+    if not changed:
+        raise Fail("No matching timeline clips to color.", type="PlacementError")
+    return {"changed": changed, "count": len(changed)}
+
+
 def clip_metadata_get(resolve, params=None):
     params = params or {}
     _, pool = _pool(resolve)
@@ -666,6 +769,7 @@ METHODS = {
     "markers_clear": markers_clear,
     "clip_metadata_get": clip_metadata_get,
     "clip_metadata_set": clip_metadata_set,
+    "set_clip_color": set_clip_color,
 }
 
 
@@ -674,7 +778,11 @@ def dispatch(resolve, method, params=None):
     if not fn:
         return {
             "ok": False,
-            "error": Fail("Unknown method '%s'." % method, type="UnknownMethod").to_dict(),
+            "error": Fail(
+                "Unknown method '%s'." % method,
+                type="UnknownMethod",
+                fix="Re-click Workspace > Scripts > Utility > video_harness_bridge after install-bridge.",
+            ).to_dict(),
         }
     try:
         result = fn(resolve, params or {})

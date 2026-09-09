@@ -7,9 +7,9 @@ description: DaVinci Resolve harness and MCP for inspect, import, place, and typ
 
 # video-harness
 
-DaVinci Resolve harness and MCP server for **timeline placement**, **folder import**, and **typed metadata markers**.
+DaVinci Resolve harness and MCP server for **timeline placement**, **folder import**, **clip color**, and **typed metadata markers**.
 
-It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, mark.
+It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, color, mark. Release **0.1.1**: [changelog](https://github.com/sakethramanujam/video-harness/blob/main/CHANGELOG.md).
 
 ## Docs
 
@@ -34,8 +34,8 @@ video-harness doctor
 
 1. Open Resolve and a project.
 2. **Workspace → Scripts → Utility → video_harness_bridge** (click **once**). No window — that is expected.
-3. `video-harness doctor` → `"bridge": { "ok": true }`.
-4. `video-harness inspect`.
+3. `video-harness doctor` → `"bridge": { "ok": true }` with `bridge: "0.1.1"` and `set_clip_color` in `methods`.
+4. `video-harness inspect`. After `install-bridge`, click Utility again so the running script matches disk.
 
 App Store (“Lite”) vs website install: see [Setup](setup.md). Lite is sandboxed; the website free build is the better $0 option.
 

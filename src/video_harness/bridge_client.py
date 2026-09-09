@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import threading
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from typing import Any
 from urllib.parse import urljoin
 
@@ -12,6 +14,46 @@ from pathlib import Path
 
 from video_harness.errors import ConnectionError, HarnessError
 from video_harness.paths import bridge_config_path, config_dir
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover
+    fcntl = None  # type: ignore
+
+REQUIRED_LUA_METHODS = (
+    "ping",
+    "inspect",
+    "import_media",
+    "ensure_timeline",
+    "place",
+    "set_clip_color",
+)
+RELOAD_LUA_FIX = (
+    "install-bridge already copied the Lua file. Re-click Workspace > Scripts > "
+    "Utility > video_harness_bridge (one instance) so the running script reloads. "
+    "Do not launch fuscript from a terminal — App Store Lite kills it."
+)
+
+_RPC_THREAD_LOCK = threading.Lock()
+
+
+def loads_rpc_json(text: str) -> Any:
+    """Parse Lua/Python RPC JSON. Accepts (and strips) illegal control characters."""
+    try:
+        return json.loads(text, strict=False)
+    except json.JSONDecodeError:
+        cleaned = "".join(ch if (ord(ch) >= 32 or ch in "\n\r\t") else " " for ch in text)
+        return json.loads(cleaned, strict=False)
+
+
+def _lua_methods_stale(data: dict[str, Any]) -> str | None:
+    methods = data.get("methods")
+    if not isinstance(methods, list):
+        return "Lua bridge did not advertise methods (running script is older than this CLI)."
+    missing = [name for name in REQUIRED_LUA_METHODS if name not in methods]
+    if missing:
+        return "Lua bridge is missing methods: " + ", ".join(missing) + "."
+    return None
 
 
 def load_bridge_config() -> dict[str, Any]:
@@ -119,7 +161,7 @@ class FileBridgeClient:
         if not self.heartbeat.is_file():
             raise ConnectionError(
                 "Lua bridge heartbeat missing.",
-                fix="Workspace > Scripts > Edit > video_harness_bridge (Lua). Leave it running.",
+                fix="Workspace > Scripts > Utility > video_harness_bridge (Lua). Leave it running.",
                 state={"path": str(self.heartbeat)},
             )
         try:
@@ -130,13 +172,48 @@ class FileBridgeClient:
         if time.time() - ts > 8:
             raise ConnectionError(
                 "Lua bridge heartbeat is stale.",
-                fix="Re-run Workspace > Scripts > Edit > video_harness_bridge.",
+                fix="Re-run Workspace > Scripts > Utility > video_harness_bridge.",
                 state={"heartbeat": data},
             )
+        stale = _lua_methods_stale(data)
+        if stale:
+            raise ConnectionError(stale, fix=RELOAD_LUA_FIX, state={"heartbeat": data})
         data["ok"] = True
         return data
 
+    @contextmanager
+    def _exclusive_rpc(self):
+        self.rpc.mkdir(parents=True, exist_ok=True)
+        lock_path = self.rpc / "client.lock"
+        fh = lock_path.open("a+")
+        try:
+            if fcntl is not None:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            yield
+        finally:
+            if fcntl is not None:
+                try:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+                except OSError:
+                    pass
+            fh.close()
+
+    def _wait_request_slot(self, deadline: float) -> None:
+        while time.time() < deadline:
+            if not self.req.exists() or self.req.stat().st_size == 0:
+                return
+            time.sleep(0.05)
+        try:
+            self.req.unlink()
+        except OSError:
+            pass
+
     def call(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        with _RPC_THREAD_LOCK:
+            with self._exclusive_rpc():
+                return self._call_locked(method, params)
+
+    def _call_locked(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         self.rpc.mkdir(parents=True, exist_ok=True)
         req_id = str(uuid.uuid4())
         payload = {
@@ -145,17 +222,40 @@ class FileBridgeClient:
             "method": method,
             "params": params or {},
         }
+        deadline = time.time() + self.timeout
+        self._wait_request_slot(deadline)
         if self.res.exists():
-            self.res.unlink()
+            try:
+                self.res.unlink()
+            except OSError:
+                pass
         tmp = self.req.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(payload))
         tmp.replace(self.req)
-        deadline = time.time() + self.timeout
+        last_stat = None
+        stable = 0
         while time.time() < deadline:
             if self.res.is_file():
                 try:
-                    body = json.loads(self.res.read_text())
+                    raw = self.res.read_text(encoding="utf-8", errors="replace")
+                    body = loads_rpc_json(raw)
                 except Exception:
+                    try:
+                        stat = (self.res.stat().st_size, self.res.stat().st_mtime)
+                    except OSError:
+                        time.sleep(0.05)
+                        continue
+                    if stat == last_stat:
+                        stable += 1
+                    else:
+                        stable = 0
+                        last_stat = stat
+                    if stable >= 10:
+                        raise ConnectionError(
+                            "Lua bridge wrote a response that is not valid JSON.",
+                            fix=RELOAD_LUA_FIX,
+                            state={"path": str(self.res)},
+                        )
                     time.sleep(0.05)
                     continue
                 if body.get("id") == req_id:
@@ -169,12 +269,12 @@ class FileBridgeClient:
                             err.get("message") or "Lua bridge call failed.",
                             type=err.get("type") or "HarnessError",
                             cause=err.get("cause"),
-                            fix=err.get("fix"),
+                            fix=err.get("fix") or (RELOAD_LUA_FIX if err.get("type") == "UnknownMethod" else None),
                             state=err.get("state") or {},
                         )
                     return body.get("result")
             time.sleep(0.05)
         raise ConnectionError(
             "Lua bridge did not answer in time.",
-            fix="Confirm video_harness_bridge.lua is still running (Workspace > Scripts > Edit).",
+            fix="Confirm video_harness_bridge.lua is still running (Workspace > Scripts > Utility).",
         )

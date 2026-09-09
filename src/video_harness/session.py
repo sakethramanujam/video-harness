@@ -69,7 +69,7 @@ def connect(transport: str | None = None) -> Session:
         "Could not reach DaVinci Resolve.",
         cause=" | ".join(errors) or "no transports tried",
         fix=(
-            "Free: Workspace > Scripts > Edit > video_harness_bridge (Lua) and leave it running. "
+            "Free: Workspace > Scripts > Utility > video_harness_bridge (Lua) and leave it running. "
             "Python scripts stay hidden until Resolve finds Python; Lua always lists."
         ),
         state={"tried": errors, "transport": choice},

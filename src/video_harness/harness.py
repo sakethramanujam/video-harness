@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from video_harness.clip_colors import normalize_clip_color
 from video_harness.mark import event_to_upsert, events_from_clip_metadata
 from video_harness.registry import TypeRegistry
 from video_harness.session import Session
@@ -61,6 +62,9 @@ class Harness:
         return {"imported": imported, "timeline": ensured, "placed": placed}
 
     def set_clip_color(self, **params: Any) -> dict[str, Any]:
+        color = params.get("color")
+        if color:
+            params = {**params, "color": normalize_clip_color(color)}
         return self.session.call("set_clip_color", params)
 
     def marker_upsert(self, markers: list[dict[str, Any]] | dict[str, Any]) -> dict[str, Any]:
