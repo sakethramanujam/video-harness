@@ -100,13 +100,38 @@ class TravelMontageDirector:
         # Group by region to ensure geographic balance
         by_region: dict[str, list[dict[str, Any]]] = {}
         for c in analyzed_clips:
+            tel = c.get("telemetry", {})
+            max_alt = tel.get("max_alt_m", 0.0)
+            avg_alt = tel.get("avg_alt_m", 0.0)
+            mov = tel.get("movement_profile", "hover")
+
+            # REJECTION FILTER: Eliminate ground junk, asphalt parking lots, pre-takeoff stationary shots
+            # Clips that never gained meaningful altitude (< 5m) or were purely hovering on the ground
+            if max_alt < 5.0 and mov == "hover":
+                continue
+            # Clips with virtually no altitude or distance displacement are pre-flight setups
+            if avg_alt < 2.5:
+                continue
+
             by_region.setdefault(c["region"], []).append(c)
 
         # Select the best hero clips from each region (variety of altitudes & moves)
         curated_clips: list[dict[str, Any]] = []
         for region_name, r_clips in by_region.items():
-            # Sort within region by altitude (high reveals first)
-            r_clips.sort(key=lambda x: x.get("telemetry", {}).get("avg_alt_m", 0.0), reverse=True)
+            # Sort within region by movement and altitude (dynamic crane/flyovers with real elevation first)
+            def hero_score(clip_info: dict[str, Any]) -> float:
+                t = clip_info.get("telemetry", {})
+                score = t.get("avg_alt_m", 0.0)
+                m = t.get("movement_profile")
+                if m == "forward_flyover":
+                    score += 20.0
+                elif m == "ascending_crane":
+                    score += 15.0
+                elif m == "hover":
+                    score -= 10.0
+                return score
+
+            r_clips.sort(key=hero_score, reverse=True)
             # Pick 2-3 clips per region
             picks = r_clips[:3]
             curated_clips.extend(picks)

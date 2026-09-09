@@ -191,6 +191,36 @@ def clip_set_color(
 
 
 @mcp.tool()
+def timeline_insert_title(
+    title_name: str = "Text+",
+    title_type: str = "fusion",
+) -> str:
+    """Insert a Title or Fusion Title (e.g. Text+, Text, Lower Third) into the timeline at the current playhead.
+
+    title_name: Name of the title template, e.g. 'Text+', 'Text', or a Fusion title.
+    title_type: 'fusion' (calls InsertFusionTitleIntoTimeline) or 'standard' (calls InsertTitleIntoTimeline).
+    """
+    try:
+        return _ok(get_harness().insert_title(title_name=title_name, title_type=title_type))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
+def timeline_insert_generator(
+    generator_name: str = "Solid Color",
+) -> str:
+    """Insert a Generator (e.g. 'Solid Color', '10 Step', 'SMPTE Color Bars') into the timeline.
+
+    generator_name: Name of the generator template.
+    """
+    try:
+        return _ok(get_harness().insert_generator(generator_name=generator_name))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
 def marker_upsert(markers: list[dict[str, Any]]) -> str:
     """Create or replace typed markers. Idempotent on payload.id.
 

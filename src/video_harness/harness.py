@@ -67,6 +67,12 @@ class Harness:
             params = {**params, "color": normalize_clip_color(color)}
         return self.session.call("set_clip_color", params)
 
+    def insert_title(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("insert_title", params)
+
+    def insert_generator(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("insert_generator", params)
+
     def marker_upsert(self, markers: list[dict[str, Any]] | dict[str, Any]) -> dict[str, Any]:
         if isinstance(markers, dict):
             markers = [markers]

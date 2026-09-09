@@ -17,6 +17,8 @@ local METHOD_NAMES = {
     "place",
     "marker_upsert",
     "set_clip_color",
+    "insert_title",
+    "insert_generator",
 }
 
 local function home_dir()
@@ -1063,6 +1065,51 @@ local function set_clip_color(r, params)
     return { changed = changed, count = #changed }
 end
 
+local function insert_title(r, params)
+    local _, _, tl = timeline_of(r)
+    local title_type = params.title_type or "text_plus"
+    local title_name = params.title_name or params.name or "Text+"
+    local ok = false
+    local item = nil
+
+    if title_type == "fusion" or title_type == "text_plus" then
+        item = safe(function()
+            return tl:InsertFusionTitleIntoTimeline(title_name)
+        end)
+    else
+        item = safe(function()
+            return tl:InsertTitleIntoTimeline(title_name)
+        end)
+    end
+
+    if not item then
+        fail("Failed to insert title '" .. tostring(title_name) .. "' into timeline.", "PlacementError")
+    end
+
+    return {
+        success = true,
+        title_name = title_name,
+        title_type = title_type,
+    }
+end
+
+local function insert_generator(r, params)
+    local _, _, tl = timeline_of(r)
+    local generator_name = params.generator_name or params.name or "Solid Color"
+    local item = safe(function()
+        return tl:InsertGeneratorIntoTimeline(generator_name)
+    end)
+
+    if not item then
+        fail("Failed to insert generator '" .. tostring(generator_name) .. "' into timeline.", "PlacementError")
+    end
+
+    return {
+        success = true,
+        generator_name = generator_name,
+    }
+end
+
 local METHODS = {
     ping = ping,
     inspect = inspect,
@@ -1071,6 +1118,8 @@ local METHODS = {
     place = place,
     marker_upsert = marker_upsert,
     set_clip_color = set_clip_color,
+    insert_title = insert_title,
+    insert_generator = insert_generator,
 }
 
 local function dispatch(r, method, params)
