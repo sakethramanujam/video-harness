@@ -11,6 +11,7 @@ It does not wrap the whole Resolve API. Agents get a small job surface: inspect,
 | [docs/setup.md](docs/setup.md) | Install, which Resolve you have, start the Lua bridge |
 | [docs/architecture.md](docs/architecture.md) | Transports (Studio / HTTP / Lua file-queue), API limits |
 | [docs/mcp.md](docs/mcp.md) | MCP tools, client config, agent prompts |
+| [docs/grok.md](docs/grok.md) | Wire this MCP into Grok and prompt import / place / color |
 | [docs/workflows.md](docs/workflows.md) | Import folders, place clips, proxies, marker types |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Doctor output, Scripts menu, sandbox, limitation dialog |
 

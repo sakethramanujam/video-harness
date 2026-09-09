@@ -913,6 +913,71 @@ local function marker_upsert(r, params)
     return { markers = results, count = #results }
 end
 
+local function set_clip_color(r, params)
+    local color = params.color
+    local _, _, tl = timeline_of(r)
+    local unique_ids = params.unique_ids or {}
+    local media_id = params.media_id
+    local clip_name = params.clip_name or params.name
+    local changed = {}
+    for _, track_type in ipairs({ "video", "audio" }) do
+        local count = tonumber(safe(function()
+            return tl:GetTrackCount(track_type)
+        end, 0)) or 0
+        for index = 1, count do
+            local items = safe(function()
+                return tl:GetItemListInTrack(track_type, index)
+            end, {}) or {}
+            for _, item in pairs(items) do
+                local uid = sval(safe(function()
+                    return item:GetUniqueId()
+                end))
+                local mp = safe(function()
+                    return item:GetMediaPoolItem()
+                end)
+                local mid = mp and sval(safe(function()
+                    return mp:GetMediaId()
+                end)) or ""
+                local iname = sval(safe(function()
+                    return item:GetName()
+                end))
+                local match = false
+                if #unique_ids > 0 then
+                    for _, want in ipairs(unique_ids) do
+                        if want == uid then
+                            match = true
+                        end
+                    end
+                elseif media_id and media_id == mid then
+                    match = true
+                elseif clip_name and clip_name == iname then
+                    match = true
+                elseif (not unique_ids or #unique_ids == 0) and not media_id and not clip_name then
+                    match = true
+                end
+                if match then
+                    local ok
+                    if color and color ~= "" then
+                        ok = item:SetClipColor(color)
+                    else
+                        ok = item:ClearClipColor()
+                    end
+                    changed[#changed + 1] = {
+                        unique_id = uid,
+                        name = iname,
+                        color = color or "",
+                        success = not not ok,
+                    }
+                end
+            end
+        end
+    end
+    if #changed == 0 then
+        fail("No matching timeline clips to color.", "PlacementError")
+    end
+    return { changed = changed, count = #changed }
+end
+
 local METHODS = {
     ping = ping,
     inspect = inspect,
@@ -920,6 +985,7 @@ local METHODS = {
     ensure_timeline = ensure_timeline,
     place = place,
     marker_upsert = marker_upsert,
+    set_clip_color = set_clip_color,
 }
 
 local function dispatch(r, method, params)

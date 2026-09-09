@@ -60,6 +60,9 @@ class Harness:
         placed = self.place(placements) if placements else {"placed": [], "count": 0}
         return {"imported": imported, "timeline": ensured, "placed": placed}
 
+    def set_clip_color(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("set_clip_color", params)
+
     def marker_upsert(self, markers: list[dict[str, Any]] | dict[str, Any]) -> dict[str, Any]:
         if isinstance(markers, dict):
             markers = [markers]

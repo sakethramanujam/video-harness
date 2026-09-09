@@ -164,6 +164,30 @@ def timeline_assemble(
 
 
 @mcp.tool()
+def clip_set_color(
+    color: str,
+    unique_ids: list[str] | None = None,
+    media_id: str | None = None,
+    clip_name: str | None = None,
+) -> str:
+    """Set Resolve clip color on timeline items (Orange, Green, Blue, …). Empty color clears.
+
+    Match by unique_ids, media_id, or clip_name. If none given, colors every video/audio item.
+    """
+    params: dict[str, Any] = {"color": color}
+    if unique_ids:
+        params["unique_ids"] = unique_ids
+    if media_id:
+        params["media_id"] = media_id
+    if clip_name:
+        params["clip_name"] = clip_name
+    try:
+        return _ok(get_harness().set_clip_color(**params))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
 def marker_upsert(markers: list[dict[str, Any]]) -> str:
     """Create or replace typed markers. Idempotent on payload.id.
 

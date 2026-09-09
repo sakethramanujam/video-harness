@@ -1,0 +1,9 @@
+# Copy to config.toml and point command at *your* venv, or run:
+#   grok mcp add --scope project video-harness -- "$(pwd)/.venv/bin/video-harness" mcp
+#
+# Do not commit config.toml — it is machine-local.
+
+[mcp_servers.video-harness]
+command = "/ABS/PATH/TO/video-harness/.venv/bin/video-harness"
+args = ["mcp"]
+enabled = true
