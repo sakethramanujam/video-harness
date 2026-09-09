@@ -427,8 +427,29 @@ def timeline_library_cut(
             add_title_markers=add_title_markers,
         )
         return _ok(draft)
+@mcp.tool()
+def timeline_travel_director(
+    timeline: str = "Idaho_Epic_Travel_Montage",
+    region_filter: str | None = None,
+) -> str:
+    """Build an intelligent 3-Act travel documentary montage across geographic regions.
+
+    Clusters footage by location (Salt Flats, Shoshone Falls, Angel Lake, etc.).
+    Applies dynamic rhythmic durations (6.5s grand reveals -> 4.8s flyovers -> 3.2s low flybys).
+    Color-codes clips by region and stamps section title & altitude chapter markers.
+    """
+    from video_harness.vision.director import TravelMontageDirector
+
+    director = TravelMontageDirector(get_harness())
+    try:
+        montage = director.build_travel_montage(
+            timeline_name=timeline,
+            region_filter=region_filter,
+        )
+        return _ok(montage)
     except Exception as exc:
         return _err(exc)
+
 
 
 
