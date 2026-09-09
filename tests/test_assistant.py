@@ -10,13 +10,30 @@ class MockImpl:
 
     def call(self, method: str, params: dict | None = None):
         self.calls.append((method, params or {}))
+        if method == "inspect":
+            return {
+                "media": {
+                    "clips": [
+                        {"name": "clip1.mp4", "media_id": "test_clip_1", "path": "/test/clip1.mp4", "frames": 300, "fps": 24.0},
+                        {"name": "clip2.mp4", "media_id": "test_clip_2", "path": "/test/clip2.mp4", "frames": 300, "fps": 24.0},
+                    ]
+                },
+                "timeline": {"name": "Edit"},
+            }
+
         if method == "ensure_timeline":
             return {"timeline": {"name": (params or {}).get("name")}}
         if method == "place":
-            return {"placed": (params or {}).get("items", []), "count": len((params or {}).get("items", []))}
+            items = (params or {}).get("items", [])
+            placed = [{"unique_id": f"uid-{i}", "name": it.get("name", "clip")} for i, it in enumerate(items)]
+            return {"placed": placed, "count": len(placed)}
+
         if method == "set_clip_color":
             return {"colored": 1}
+        if method == "marker_upsert":
+            return {"markers": (params or {}).get("markers", []), "count": len((params or {}).get("markers", []))}
         return {}
+
 
 
 def test_edit_assistant_draft_cut_with_sidecar(tmp_path: Path):

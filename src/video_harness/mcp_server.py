@@ -383,7 +383,7 @@ def timeline_draft_cut(
 ) -> str:
     """Generate a first pass video edit cut in a specified style and seek feedback.
 
-    Styles: 'montage', 'talking_head_highlights', 'fast_paced_social'.
+    Styles: 'cinematic_narrative', 'montage', 'fast_paced_social'.
     Returns placed cuts and feedback questions for iterative revisions.
     """
     from video_harness.vision.assistant import EditAssistant
@@ -399,6 +399,37 @@ def timeline_draft_cut(
         return _ok(draft)
     except Exception as exc:
         return _err(exc)
+
+
+@mcp.tool()
+def timeline_library_cut(
+    timeline: str,
+    style: str = "cinematic_narrative",
+    max_clips: int = 15,
+    user_prompt: str | None = None,
+    add_title_markers: bool = True,
+) -> str:
+    """Assemble a multi-clip rough cut across the entire imported library with telemetry titles.
+
+    Reads GPS, elevation, and camera metadata from companion .SRT files.
+    Calculates meaningful clip durations (4-8s cinematic, 3-5s montage).
+    Stamps Purple Chapter title markers on the timeline with flight telemetry.
+    """
+    from video_harness.vision.assistant import EditAssistant
+
+    assistant = EditAssistant(get_harness())
+    try:
+        draft = assistant.assemble_library_cut(
+            timeline_name=timeline,
+            style=style,
+            max_clips=max_clips,
+            user_prompt=user_prompt,
+            add_title_markers=add_title_markers,
+        )
+        return _ok(draft)
+    except Exception as exc:
+        return _err(exc)
+
 
 
 
