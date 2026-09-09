@@ -79,8 +79,13 @@ class EditAssistant:
             selected_segments = segments
 
         for seg in selected_segments:
-            start_f = seg["start_frame"]
-            end_f = seg["end_frame"]
+            start_f = int(seg["start_frame"])
+            end_f = int(seg["end_frame"])
+
+            # Resolve AppendToTimeline requires duration > 0 (end_frame > start_frame)
+            if end_f <= start_f:
+                end_f = start_f + int(preset.get("max_clip_duration_sec", 2.0) * fps)
+
             # Enforce max duration for style
             if (end_f - start_f) > max_frames:
                 end_f = start_f + max_frames
@@ -92,6 +97,7 @@ class EditAssistant:
                 "track_type": "video",
                 "track_index": 1,
             })
+
 
         self.harness.ensure_timeline(timeline_name)
         placed_res = self.harness.place(items_to_place)
