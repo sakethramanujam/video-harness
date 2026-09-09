@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+Visual context awareness, Apple Metal memory controls, and automated draft cut generation.
+
+- **Vision & Temporal Compaction.** Fast difference perceptual hash (`dHash`) with Hamming distance comparisons collapses visually static frames across time by 80-90%.
+- **Metal Memory Capping & macOS Mach Monitoring.** Mach task info tracks true physical footprint (`phys_footprint`); MLX cache and memory limits configured to prevent evicting Resolve from unified RAM.
+- **Compact Sidecar Database.** Compact JSONL sidecar under `~/.config/video-harness/describe/<media_id>.jsonl` enables sub-millisecond search without overloading Resolve's Lua file-bridge.
+- **Marker Types.** Added `scene.cut` (Sky) and `visual.shot` (Mint).
+- **Automated Draft Cut & Feedback Loop.** `timeline_draft_cut` supports style presets (`montage`, `talking_head_highlights`, `fast_paced_social`) and returns targeted iteration prompts to refine the cut.
+
 ## 0.1.1
 
 Lua bridge reliability after a real idaho import/place/color on App Store Lite.

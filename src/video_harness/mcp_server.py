@@ -282,6 +282,127 @@ def clip_metadata_get(media_id: str | None = None, clip_name: str | None = None,
         return _err(exc)
 
 
+@mcp.tool()
+def clip_describe_start(
+    path: str,
+    media_id: str | None = None,
+    interval_seconds: float = 2.0,
+    dhash_threshold: int = 4,
+) -> str:
+    """Start asynchronous VideoToolbox + dHash visual context indexing with memory bounds.
+
+    Saves compact JSONL sidecar and returns job_id for status polling.
+    """
+    import threading
+    import uuid
+    from video_harness.vision.runner import run_clip_indexing
+
+    job_id = f"job-{uuid.uuid4().hex[:8]}"
+    resolved_media_id = media_id or Path(path).stem
+
+    thread = threading.Thread(
+        target=run_clip_indexing,
+        kwargs={
+            "video_path": path,
+            "media_id": resolved_media_id,
+            "job_id": job_id,
+            "interval_seconds": interval_seconds,
+            "dhash_threshold": dhash_threshold,
+        },
+        daemon=True,
+    )
+    thread.start()
+    return _ok({"job_id": job_id, "media_id": resolved_media_id, "status": "started"})
+
+
+@mcp.tool()
+def clip_describe_status(job_id: str) -> str:
+    """Check status, progress, segments count, and memory footprint of an indexing job."""
+    from video_harness.vision.worker import JobManager
+
+    status = JobManager().get_status(job_id)
+    if not status:
+        return _ok({"job_id": job_id, "status": "not_found"})
+    return _ok(status)
+
+
+@mcp.tool()
+def clip_search_visual(media_id: str, query: str, top_k: int = 5) -> str:
+    """Instant search over compact JSONL sidecar without touching the Resolve Lua bridge."""
+    from video_harness.vision.sidecar import SidecarIndex
+
+    matches = SidecarIndex().search(media_id=media_id, query=query, top_k=top_k)
+    return _ok({"media_id": media_id, "query": query, "matches": matches})
+
+
+@mcp.tool()
+def timeline_cut_from_visual(
+    timeline: str,
+    media_id: str,
+    queries: list[str],
+    track_index: int = 1,
+) -> str:
+    """Execute edit cuts based on visual descriptions.
+
+    Finds best matching segments in sidecar index and places them sequentially on the timeline.
+    """
+    from video_harness.vision.sidecar import SidecarIndex
+
+    idx = SidecarIndex()
+    items_to_place: list[dict[str, Any]] = []
+
+    for q in queries:
+        matches = idx.search(media_id=media_id, query=q, top_k=1)
+        if matches:
+            best = matches[0]
+            items_to_place.append({
+                "media_id": media_id,
+                "source_in": best["start_frame"],
+                "source_out": best["end_frame"],
+                "track_type": "video",
+                "track_index": track_index,
+            })
+
+    if not items_to_place:
+        return _ok({"error": "No matching visual segments found for queries", "placed": []})
+
+    try:
+        get_harness().ensure_timeline(timeline)
+        res = get_harness().place(items_to_place)
+        return _ok({"timeline": timeline, "placed_cuts": items_to_place, "result": res})
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
+def timeline_draft_cut(
+    timeline: str,
+    media_id: str,
+    style: str = "montage",
+    user_prompt: str | None = None,
+) -> str:
+    """Generate a first pass video edit cut in a specified style and seek feedback.
+
+    Styles: 'montage', 'talking_head_highlights', 'fast_paced_social'.
+    Returns placed cuts and feedback questions for iterative revisions.
+    """
+    from video_harness.vision.assistant import EditAssistant
+
+    assistant = EditAssistant(get_harness())
+    try:
+        draft = assistant.generate_draft_cut(
+            timeline_name=timeline,
+            media_id=media_id,
+            style=style,
+            user_prompt=user_prompt,
+        )
+        return _ok(draft)
+    except Exception as exc:
+        return _err(exc)
+
+
+
+
 @mcp.resource("resolve://status")
 def resource_status() -> str:
     """Connection, product, version, page, project, timeline name."""

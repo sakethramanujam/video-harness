@@ -35,3 +35,14 @@ types:
     scope: clip
     duration: range
     description: Keyword or tag from clip metadata
+  scene.cut:
+    color: Sky
+    scope: clip
+    duration: point
+    description: Detected shot boundary / camera cut
+  visual.shot:
+    color: Mint
+    scope: clip
+    duration: range
+    description: Semantic scene description or visual action range
+

@@ -59,7 +59,14 @@ Free editions cannot be driven from an external `scriptapp`. The Lua script runs
 }
 ```
 
-Example: *Import `/Users/you/Movies/DaVinci Resolve/Proxy` and assemble timeline `Proxy_Cut`.* Color-code with `clip_set_color` (Cyan→Teal, Mint→Lime, Red→Violet; see [workflows](docs/workflows.md)).
+Example: *Import `/Users/you/Movies/DaVinci Resolve/Proxy`, index visual context, and assemble draft cut `Proxy_Cut` in style `montage`.* Color-code with `clip_set_color` (Cyan→Teal, Mint→Lime, Red→Violet; see [workflows](docs/workflows.md)).
+
+### Vision & Edit-Aware Tools
+- `clip_describe_start`: Background VideoToolbox + dHash visual context indexing with hard Metal/RAM bounds.
+- `clip_describe_status`: Poll progress, segments count, and physical memory footprint.
+- `clip_search_visual`: Instant keyword search over compact JSONL sidecar without touching Lua bridge.
+- `timeline_draft_cut`: Generate a first-pass edit cut in a specified style (`montage`, `talking_head_highlights`, `fast_paced_social`) and return structured feedback prompts for iteration.
+
 
 Full tool list and prompts: [MCP and agents](docs/mcp.md).
 
