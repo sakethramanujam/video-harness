@@ -1,3 +1,9 @@
+---
+layout: default
+title: Workflows
+nav_order: 6
+---
+
 # Workflows
 
 ## Import media from a folder

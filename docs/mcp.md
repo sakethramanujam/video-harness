@@ -1,3 +1,9 @@
+---
+layout: default
+title: MCP and agents
+nav_order: 4
+---
+
 # MCP and agents
 
 The MCP server is `video-harness mcp` (stdio). It is a thin wrapper over `Harness`.

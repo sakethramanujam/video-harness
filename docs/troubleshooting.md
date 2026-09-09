@@ -1,3 +1,9 @@
+---
+layout: default
+title: Troubleshooting
+nav_order: 7
+---
+
 # Troubleshooting
 
 Run `video-harness doctor` first. Read `next`, `resolve_edition`, `scriptapp`, and `bridge`.
@@ -21,7 +27,7 @@ Those names are **folders**, not your file. Open **Edit** or **Utility**.
 
 If the `.lua` file still is not listed:
 
-1. Confirm which app is running (see [setup.md](setup.md)).
+1. Confirm which app is running (see [Setup](setup.md)).
 2. App Store Lite: files must be under the **container** `Fusion/Scripts/...`. `install-bridge` does this when `lite-mas` is detected.
 3. Website build: `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/`.
 4. `.py` files stay hidden until Resolve can exec Python; Lua should still list.

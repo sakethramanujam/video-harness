@@ -1,3 +1,9 @@
+---
+layout: default
+title: Architecture
+nav_order: 3
+---
+
 # Architecture
 
 Job-oriented harness, not a 300-tool wrap of every Resolve method.

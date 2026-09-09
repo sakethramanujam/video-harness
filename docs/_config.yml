@@ -1,0 +1,45 @@
+title: video-harness
+description: DaVinci Resolve harness and MCP for timeline placement, folder import, and typed markers.
+url: https://sakethramanujam.github.io
+baseurl: /video-harness
+
+remote_theme: just-the-docs/just-the-docs@v0.10.1
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-relative-links
+  - jekyll-seo-tag
+
+relative_links:
+  enabled: true
+  collections: true
+
+search_enabled: true
+heading_anchors: true
+color_scheme: dark
+
+aux_links:
+  "GitHub":
+    - "https://github.com/sakethramanujam/video-harness"
+
+aux_links_new_tab: true
+
+nav_external_links: []
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/sakethramanujam/video-harness"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: edit
+
+callouts:
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: yellow

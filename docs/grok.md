@@ -1,3 +1,9 @@
+---
+layout: default
+title: Grok
+nav_order: 5
+---
+
 # Use video-harness from Grok
 
 Grok talks to Resolve through this MCP. Resolve must already be running with the Lua bridge clicked **once**.

@@ -1,3 +1,10 @@
+---
+layout: home
+title: Home
+nav_order: 1
+description: DaVinci Resolve harness and MCP for inspect, import, place, and typed markers.
+---
+
 # video-harness
 
 DaVinci Resolve harness and MCP server for **timeline placement**, **folder import**, and **typed metadata markers**.
@@ -6,16 +13,14 @@ It does not wrap the whole Resolve API. Agents get a small job surface: inspect,
 
 ## Docs
 
-Site: **[sakethramanujam.github.io/video-harness](https://sakethramanujam.github.io/video-harness/)**
-
 | Page | Contents |
 |---|---|
-| [Setup](docs/setup.md) | Install, which Resolve you have, start the Lua bridge |
-| [Architecture](docs/architecture.md) | Transports (Studio / HTTP / Lua file-queue), API limits |
-| [MCP and agents](docs/mcp.md) | MCP tools, client config, agent prompts |
-| [Grok](docs/grok.md) | Wire this MCP into Grok and prompt import / place / color |
-| [Workflows](docs/workflows.md) | Import folders, place clips, proxies, marker types |
-| [Troubleshooting](docs/troubleshooting.md) | Doctor output, Scripts menu, sandbox, limitation dialog |
+| [Setup](setup.md) | Install, which Resolve you have, start the Lua bridge |
+| [Architecture](architecture.md) | Transports (Studio / HTTP / Lua file-queue), API limits |
+| [MCP and agents](mcp.md) | MCP tools, client config, agent prompts |
+| [Grok](grok.md) | Wire this MCP into Grok and prompt import / place / color |
+| [Workflows](workflows.md) | Import folders, place clips, proxies, marker types |
+| [Troubleshooting](troubleshooting.md) | Doctor output, Scripts menu, sandbox, limitation dialog |
 
 ## Quick start (free Resolve)
 
@@ -32,7 +37,7 @@ video-harness doctor
 3. `video-harness doctor` → `"bridge": { "ok": true }`.
 4. `video-harness inspect`.
 
-App Store (“Lite”) vs website install: see [Setup](docs/setup.md). Lite is sandboxed; the website free build is the better $0 option.
+App Store (“Lite”) vs website install: see [Setup](setup.md). Lite is sandboxed; the website free build is the better $0 option.
 
 ## How it talks to Resolve
 
@@ -56,9 +61,7 @@ Free editions cannot be driven from an external `scriptapp`. The Lua script runs
 }
 ```
 
-Example: *Import `/Users/you/Movies/DaVinci Resolve/Proxy` and assemble timeline `Proxy_Cut`.*
-
-Full tool list and prompts: [MCP and agents](docs/mcp.md).
+In Grok: `/mcps` → add or enable `video-harness`. Full tool list: [MCP and agents](mcp.md). Using Grok day to day: [Grok](grok.md).
 
 ## What Resolve will not do through this API
 
@@ -67,14 +70,6 @@ Full tool list and prompts: [MCP and agents](docs/mcp.md).
 - Out-of-process scripting on free.
 - `LinkProxyMedia` is not exposed yet — importing a proxy folder edits those files as sources.
 
-## Layout
+## Source
 
-```
-src/video_harness/
-  types.yaml                         marker type → color / scope
-  harness.py                         inspect / import / place / mark
-  session.py                         direct | HTTP | Lua
-  scripts/video_harness_bridge.lua   in-app listener (free)
-  scripts/vh_runtime.py              Python Resolve ops (Studio)
-  mcp_server.py
-```
+[github.com/sakethramanujam/video-harness](https://github.com/sakethramanujam/video-harness)
