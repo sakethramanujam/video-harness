@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0
+## 0.2.0 (unreleased)
 
 Visual context awareness, Apple Metal memory controls, and automated draft cut generation.
 
@@ -9,6 +9,11 @@ Visual context awareness, Apple Metal memory controls, and automated draft cut g
 - **Compact Sidecar Database.** Compact JSONL sidecar under `~/.config/video-harness/describe/<media_id>.jsonl` enables sub-millisecond search without overloading Resolve's Lua file-bridge.
 - **Marker Types.** Added `scene.cut` (Sky) and `visual.shot` (Mint).
 - **Automated Draft Cut & Feedback Loop.** `timeline_draft_cut` supports style presets (`montage`, `talking_head_highlights`, `fast_paced_social`) and returns targeted iteration prompts to refine the cut.
+
+## 0.1.2
+
+- **License.** MIT (Copyright 2026 Saketha Ramanjam). `LICENSE` at repo root; `pyproject.toml` declares it.
+- **Attributions.** [docs/attributions.md](docs/attributions.md) cites Blackmagic Design (Resolve/Fusion scripting), MCP and the Python SDK, Pydantic, PyYAML, pytest, Jekyll / just-the-docs, GitHub Pages Actions, Srinivasan’s *Samurai Engineer* mapping, Krawetz dHash, Hamming, ISO BMFF, and trademarks we name but do not own.
 
 ## 0.1.1
 

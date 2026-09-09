@@ -9,7 +9,7 @@ description: DaVinci Resolve harness and MCP for inspect, import, place, and typ
 
 DaVinci Resolve harness and MCP server for **timeline placement**, **folder import**, **clip color**, and **typed metadata markers**.
 
-It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, color, mark. Release **0.1.1**: [changelog](https://github.com/sakethramanujam/video-harness/blob/main/CHANGELOG.md).
+It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, color, mark. Release **0.1.2**: [changelog](https://github.com/sakethramanujam/video-harness/blob/main/CHANGELOG.md). [MIT](https://github.com/sakethramanujam/video-harness/blob/main/LICENSE). [Attributions](attributions.md).
 
 ## Docs
 
@@ -21,6 +21,7 @@ It does not wrap the whole Resolve API. Agents get a small job surface: inspect,
 | [Grok](grok.md) | Wire this MCP into Grok and prompt import / place / color |
 | [Workflows](workflows.md) | Import folders, place clips, proxies, marker types |
 | [Troubleshooting](troubleshooting.md) | Doctor output, Scripts menu, sandbox, limitation dialog |
+| [License and attributions](attributions.md) | MIT, Blackmagic, MCP, dHash, persona sources |
 
 ## Quick start (free Resolve)
 
@@ -72,4 +73,4 @@ In Grok: `/mcps` → add or enable `video-harness`. Full tool list: [MCP and age
 
 ## Source
 
-[github.com/sakethramanujam/video-harness](https://github.com/sakethramanujam/video-harness)
+[github.com/sakethramanujam/video-harness](https://github.com/sakethramanujam/video-harness) · [MIT License](https://github.com/sakethramanujam/video-harness/blob/main/LICENSE) · [Attributions](attributions.md)

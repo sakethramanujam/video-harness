@@ -2,6 +2,10 @@
 
 Pure Python implementation with optional Pillow / NumPy acceleration when available.
 Operates on raw grayscale bytes, raw RGB tuples / byte arrays, or PIL Image objects.
+
+dHash: Neal Krawetz, The Hacker Factor Blog, "Looks Like It" (2011) and
+"Kind of Like That" (2013). Hamming distance: R. Hamming (1950).
+See docs/attributions.md.
 """
 
 from typing import Union, Sequence

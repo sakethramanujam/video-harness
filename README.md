@@ -4,7 +4,7 @@ DaVinci Resolve harness and MCP server for **timeline placement**, **folder impo
 
 It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, color, mark.
 
-Current release: **0.1.1** — see [CHANGELOG](CHANGELOG.md). Agents (any model) read [AGENTS.md](AGENTS.md).
+Current release: **0.1.2** — [CHANGELOG](CHANGELOG.md). License: [MIT](LICENSE). Attributions: [docs/attributions.md](docs/attributions.md). Agents (any model) read [AGENTS.md](AGENTS.md).
 
 ## Docs
 
@@ -18,6 +18,7 @@ Site: **[sakethramanujam.github.io/video-harness](https://sakethramanujam.github
 | [Grok](docs/grok.md) | Wire this MCP into Grok and prompt import / place / color |
 | [Workflows](docs/workflows.md) | Import folders, place clips, proxies, marker types |
 | [Troubleshooting](docs/troubleshooting.md) | Doctor output, Scripts menu, sandbox, limitation dialog |
+| [License and attributions](docs/attributions.md) | MIT license, Blackmagic, MCP, dHash, persona sources |
 
 ## Quick start (free Resolve)
 
@@ -90,3 +91,7 @@ src/video_harness/
   scripts/vh_runtime.py              Python Resolve ops (Studio)
   mcp_server.py
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Saketha Ramanjam. DaVinci Resolve is a product of Blackmagic Design Pty Ltd; this project is not affiliated with or endorsed by Blackmagic Design. Full citations: [License and attributions](docs/attributions.md).

@@ -1,4 +1,9 @@
-"""Resolve timeline clip colors (not marker colors)."""
+"""Resolve timeline clip colors (not marker colors).
+
+Palette names come from Blackmagic Design's DaVinci Resolve scripting API
+(TimelineItem.SetClipColor). Aliases (Cyan→Teal, …) are this project's.
+See docs/attributions.md.
+"""
 
 from __future__ import annotations
 

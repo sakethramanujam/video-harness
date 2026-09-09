@@ -86,3 +86,7 @@ If a file had to survive for the user, say so and put it where they asked — no
 - **Inspect.** Prefer `media=none` when you only need the timeline. Do not block a cut on a 126-clip metadata dump.
 - **Link, don’t copy.** `media_import` stores paths.
 - **Lite sandbox.** Prefer media under `~/Movies`. Container `HOME` is `Data/`. Config is `Data/.config/video-harness/`.
+
+## License
+
+The repo is MIT (`LICENSE`). When you take a method, paper, blog, or dependency, add a row to [docs/attributions.md](docs/attributions.md) in the same change. Do not copy Blackmagic sample scripts into the tree.
