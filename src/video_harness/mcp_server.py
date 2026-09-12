@@ -257,6 +257,36 @@ def timeline_set_item_property(
 
 
 @mcp.tool()
+def timeline_overlay_title(
+    unique_id: str,
+    text: str,
+    size: float = 0.07,
+    y: float = 0.2,
+) -> str:
+    """Put Fusion Text+ *over* a timeline clip (establishing-shot titles), not a V1 bumper."""
+    try:
+        return _ok(get_harness().overlay_fusion_title(unique_id=unique_id, text=text, size=size, y=y))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
+def timeline_apply_lut(
+    path: str,
+    node: int = 1,
+    unique_ids: list[str] | None = None,
+) -> str:
+    """Apply a .cube LUT to timeline video items (node 1 by default)."""
+    params: dict[str, Any] = {"path": path, "node": node}
+    if unique_ids:
+        params["unique_ids"] = unique_ids
+    try:
+        return _ok(get_harness().apply_lut(**params))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
 def timeline_insert_generator(
     generator_name: str = "Solid Color",
 ) -> str:

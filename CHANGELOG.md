@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+
+- **Overlay titles and LUTs.** Lua/MCP `overlay_fusion_title` (Fusion Text+ on a clip, for titles *over* establishing shots) and `apply_lut` (`TimelineItem.SetLUT`). Follows Joris Hermans’ Resolve 19 cinematic walkthrough (wide establishes, then closer shots; titles over picture).
+- Cinematic assembly still cannot blade/ripple or stamp Cross Dissolve on Lite 21.0.4.5.
+
 ## 0.1.3
 
 - **Edit dress.** Lua/MCP `set_timecode`, `add_transition` (Cross Dissolve when Resolve exposes `TimelineItem.AddTransition`), `set_item_property` (Zoom/Opacity/Pan), and `insert_title` with optional playhead + Fusion `StyledText`.

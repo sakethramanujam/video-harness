@@ -49,6 +49,8 @@ Keep Resolve + the Lua bridge running. The MCP process does not start Resolve.
 | `timeline_set_timecode` | Move playhead |
 | `timeline_add_transition` | Cross Dissolve at edits when the API exists (21.1+) |
 | `timeline_set_item_property` | ZoomX/Y, Opacity, Pan, Tilt, … |
+| `timeline_overlay_title` | Fusion Text+ **over** a clip (`unique_id`, `text`) |
+| `timeline_apply_lut` | Apply a `.cube` to timeline items |
 
 Resources: `resolve://status`, `resolve://timeline`, `resolve://types`.
 

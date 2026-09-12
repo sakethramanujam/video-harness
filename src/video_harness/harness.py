@@ -82,6 +82,12 @@ class Harness:
     def set_item_property(self, **params: Any) -> dict[str, Any]:
         return self.session.call("set_item_property", params)
 
+    def overlay_fusion_title(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("overlay_fusion_title", params)
+
+    def apply_lut(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("apply_lut", params)
+
     def marker_upsert(self, markers: list[dict[str, Any]] | dict[str, Any]) -> dict[str, Any]:
         if isinstance(markers, dict):
             markers = [markers]

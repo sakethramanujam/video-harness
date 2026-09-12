@@ -30,7 +30,7 @@ We drive the published scripting surface (`scriptapp`, `MediaPool.ImportMedia`, 
 | Product | [DaVinci Resolve](https://www.blackmagicdesign.com/products/davinciresolve) |
 | Support / downloads | [blackmagicdesign.com/support](https://www.blackmagicdesign.com/support/) |
 | Scripting notes | Bundled with Resolve: `DaVinci Resolve.app/Contents/Resources/Developer/Scripting/` (README and examples). Not copied here. |
-| Title / generator / property APIs | `Timeline.InsertFusionTitleIntoTimeline`, `InsertTitleIntoTimeline`, `InsertGeneratorIntoTimeline`, `TimelineItem.SetProperty` / `GetProperty` (Pan, Tilt, ZoomX/Y, Opacity, …). `TimelineItem.AddTransition` is documented from Resolve 21.1; 21.0.4.5 may return none. |
+| Title / generator / property APIs | `Timeline.InsertFusionTitleIntoTimeline`, `InsertTitleIntoTimeline`, `InsertGeneratorIntoTimeline`, `TimelineItem.SetProperty` / `GetProperty` (Pan, Tilt, ZoomX/Y, Opacity, …). `TimelineItem.AddTransition` is documented from Resolve 21.1; 21.0.4.5 may return none. `TimelineItem.AddFusionComp`, Fusion `Comp:AddTool("TextPlus")`, `TimelineItem.SetLUT`. Bundled Film Looks `.cube` LUTs ship inside the Resolve app (e.g. Rec.709 Fujifilm 3513DI). |
 | Trademarks | DaVinci Resolve, Fusion, Blackmagic Design, and related marks belong to Blackmagic Design Pty Ltd. |
 
 App Store “Lite” sandboxing (`com.blackmagic-design.DaVinciResolveLite`) is Apple’s and Blackmagic’s packaging, not ours.
@@ -67,6 +67,14 @@ POSIX `fcntl` file locks (serial RPC) are IEEE Std 1003.1.
 |---|---|---|
 | [Grok](https://x.ai) / Grok Build TUI | MCP client used in development | xAI. Product names are xAI’s. |
 | Antigravity CLI (`agy`) | Peer agent on vision/RFC work in this tree | Google Antigravity CLI. Not bundled. |
+
+## Editing craft (method we follow)
+
+| Work | Role here | Citation |
+|---|---|---|
+| Joris Hermans, *FAST, EASY & FREE! How to Edit a CINEMATIC Video in DaVinci Resolve 19 [Beginners Tutorial]* | Cinematic assembly: cull junk; open with 2–3 wide establishing shots; intercut wide vs closer; titles **over** those wides; soundtrack + cuts on beats; end fades; global grade (adjustment clip / LUT) | YouTube, 19 Oct 2024: [watch?v=sh5MEb5cX1M](https://www.youtube.com/watch?v=sh5MEb5cX1M) |
+
+Resolve’s free Edit page still owns blade, ripple trim, Cmd-T dissolves, and adjustment clips. This harness places and dresses; it does not razor.
 
 ## Craft and persona
 

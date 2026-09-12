@@ -22,6 +22,8 @@ local METHOD_NAMES = {
     "set_timecode",
     "add_transition",
     "set_item_property",
+    "overlay_fusion_title",
+    "apply_lut",
 }
 
 local function home_dir()
@@ -1294,6 +1296,130 @@ local function set_item_property(r, params)
     return { changed = changed, count = #changed }
 end
 
+local function find_timeline_item(tl, unique_id)
+    for _, track_type in ipairs({ "video", "audio" }) do
+        local count = tonumber(safe(function()
+            return tl:GetTrackCount(track_type)
+        end, 0)) or 0
+        for index = 1, count do
+            local items = safe(function()
+                return tl:GetItemListInTrack(track_type, index)
+            end, {}) or {}
+            for _, item in pairs(items) do
+                local uid = sval(safe(function()
+                    return item:GetUniqueId()
+                end))
+                if uid == unique_id then
+                    return item
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function overlay_fusion_title(r, params)
+    -- Title *over* a clip (Fusion Text+ on the item), not a V1 bumper.
+    -- Blackmagic TimelineItem.AddFusionComp / Fusion Comp:AddTool("TextPlus").
+    local _, _, tl = timeline_of(r)
+    local uid = params.unique_id
+    local text = params.text
+    if not uid or not text or text == "" then
+        fail("unique_id and text are required.", "PlacementError")
+    end
+    local item = find_timeline_item(tl, uid)
+    if not item then
+        fail("No timeline item with that unique_id.", "PlacementError")
+    end
+    local comp = safe(function()
+        return item:GetFusionCompByIndex(1)
+    end)
+    if not comp then
+        comp = safe(function()
+            return item:AddFusionComp()
+        end)
+    end
+    if not comp then
+        fail("Could not add a Fusion composition on the clip.", "PlacementError")
+    end
+    local tool = safe(function()
+        return comp:AddTool("TextPlus")
+    end)
+    if not tool then
+        fail("Fusion AddTool TextPlus failed.", "PlacementError")
+    end
+    local size = tonumber(params.size or 0.07) or 0.07
+    local y = tonumber(params.y or 0.2) or 0.2
+    safe(function()
+        tool.StyledText = text
+    end)
+    safe(function()
+        tool.Size = size
+    end)
+    safe(function()
+        tool.Center = { 0.5, y }
+    end)
+    return {
+        success = true,
+        unique_id = uid,
+        text = text,
+        size = size,
+        y = y,
+    }
+end
+
+local function apply_lut(r, params)
+    -- TimelineItem.SetLUT(nodeIndex, lutPath). lutPath should be a Resolve-readable .cube.
+    local _, _, tl = timeline_of(r)
+    local path = params.path or params.lut or params.lut_path
+    local node = tonumber(params.node or params.node_index or 1) or 1
+    if not path or path == "" then
+        fail("path (LUT .cube) is required.", "PlacementError")
+    end
+    local unique_ids = params.unique_ids or {}
+    local changed = {}
+    for _, track_type in ipairs({ "video" }) do
+        local count = tonumber(safe(function()
+            return tl:GetTrackCount(track_type)
+        end, 0)) or 0
+        for index = 1, count do
+            local items = safe(function()
+                return tl:GetItemListInTrack(track_type, index)
+            end, {}) or {}
+            for _, item in pairs(items) do
+                local uid = sval(safe(function()
+                    return item:GetUniqueId()
+                end))
+                local iname = sval(safe(function()
+                    return item:GetName()
+                end))
+                if iname ~= "" then
+                    local want = true
+                    if #unique_ids > 0 then
+                        want = false
+                        for _, w in ipairs(unique_ids) do
+                            if w == uid then
+                                want = true
+                            end
+                        end
+                    end
+                    if want then
+                        local ok = safe(function()
+                            return item:SetLUT(node, path)
+                        end)
+                        changed[#changed + 1] = {
+                            unique_id = uid,
+                            name = iname,
+                            success = not not ok,
+                        }
+                    end
+                end
+            end
+        end
+    end
+    return { changed = changed, count = #changed, path = path, node = node }
+end
+
 local function insert_generator(r, params)
     local _, _, tl = timeline_of(r)
     local generator_name = params.generator_name or params.name or "Solid Color"
@@ -1324,6 +1450,8 @@ local METHODS = {
     set_timecode = set_timecode,
     add_transition = add_transition,
     set_item_property = set_item_property,
+    overlay_fusion_title = overlay_fusion_title,
+    apply_lut = apply_lut,
 }
 
 local function dispatch(r, method, params)
