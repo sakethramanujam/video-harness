@@ -34,7 +34,7 @@ If the `.lua` file still is not listed:
 
 ## Clicking the script does nothing on 21.1
 
-Fusion 21.1 can start Lua with **`package` nil**. The bridge used `package.config` for path separators and died immediately (`attempt to index global 'package'`). Current Lua does not touch `package`. Click Utility again after `install-bridge`.
+Fusion 21.1 Workspace Scripts can start Lua with **`package` and `io` both nil**. Older bridges crashed on `package.config` or `io.open`. Current Lua uses `/` path join and Fusion `bmd.readfile` / `bmd.writefile` for the RPC queue. Run `install-bridge`, then click Utility again.
 
 ## Clicking the script does nothing
 

@@ -4,7 +4,7 @@ DaVinci Resolve harness and MCP server for **timeline placement**, **folder impo
 
 It does not wrap the whole Resolve API. Agents get a small job surface: inspect, import, place, color, mark.
 
-Current release: **0.1.8** — [CHANGELOG](CHANGELOG.md). License: [MIT](LICENSE). Attributions: [docs/attributions.md](docs/attributions.md). Agents (any model) read [AGENTS.md](AGENTS.md).
+Current release: **0.1.9** — [CHANGELOG](CHANGELOG.md). License: [MIT](LICENSE). Attributions: [docs/attributions.md](docs/attributions.md). Agents (any model) read [AGENTS.md](AGENTS.md).
 
 ## Docs
 

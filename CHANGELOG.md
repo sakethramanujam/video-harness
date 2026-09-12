@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.1.9
+
+- **21.1 Lua: `io` may be nil too.** File-queue RPC uses Fusion `bmd.readfile` / `bmd.writefile` when `io` is missing (after `package` was already removed).
+
 ## 0.1.8
 
-- **21.1 Lua `package` is nil.** Path join no longer uses `package.config`, so the Utility script actually stays running.
+- **21.1 Lua `package` is nil.** Path join no longer uses `package.config`.
 
 ## 0.1.7
 

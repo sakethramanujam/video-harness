@@ -51,55 +51,88 @@ local HB_PATH = join(CFG_DIR, "bridge-heartbeat.json")
 local CFG_PATH = join(CFG_DIR, "bridge.json")
 local LOG_PATH = join(CFG_DIR, "bridge.log")
 
-local function log(msg)
-    local f = io.open(LOG_PATH, "a")
-    if f then
-        f:write(os.date("%Y-%m-%d %H:%M:%S") .. " " .. tostring(msg) .. "\n")
+-- Fusion 21.1 Workspace Scripts may leave both `package` and `io` nil.
+-- Prefer bmd.readfile / bmd.writefile; fall back to io when present.
+local function read_file(path)
+    if bmd and bmd.readfile then
+        local ok, data = pcall(bmd.readfile, path)
+        if ok and data ~= nil then
+            return data
+        end
+    end
+    if io and io.open then
+        local f = io.open(path, "rb")
+        if not f then
+            return nil
+        end
+        local data = f:read("*a")
         f:close()
+        return data
+    end
+    return nil
+end
+
+local function write_file_direct(path, data)
+    if bmd and bmd.writefile then
+        local ok = pcall(bmd.writefile, path, data)
+        return ok and true or false
+    end
+    if io and io.open then
+        local f = io.open(path, "wb")
+        if not f then
+            return false
+        end
+        f:write(data)
+        f:close()
+        return true
+    end
+    return false
+end
+
+local function write_file(path, data)
+    local tmp = path .. ".tmp"
+    if not write_file_direct(tmp, data) then
+        return write_file_direct(path, data)
+    end
+    if os and os.remove then
+        pcall(os.remove, path)
+    end
+    if os and os.rename then
+        local ok = pcall(os.rename, tmp, path)
+        if ok then
+            return true
+        end
+    end
+    -- rename unavailable: write destination directly
+    return write_file_direct(path, data)
+end
+
+local function log(msg)
+    local line = os.date("%Y-%m-%d %H:%M:%S") .. " " .. tostring(msg) .. "\n"
+    if io and io.open then
+        local f = io.open(LOG_PATH, "a")
+        if f then
+            f:write(line)
+            f:close()
+        end
+    else
+        local prev = read_file(LOG_PATH) or ""
+        write_file_direct(LOG_PATH, prev .. line)
     end
     print("[video-harness-bridge] " .. tostring(msg))
 end
 
 local function mkdir_p(path)
-    -- Sandboxed Resolve cannot os.execute. Best-effort: create by writing a keep file
-    -- after the host installer has created CFG_DIR.
+    -- install-bridge creates CFG_DIR/rpc. Best-effort marker when io exists.
     local marker = join(path, ".keep")
-    local f = io.open(marker, "a")
-    if f then
-        f:close()
+    if io and io.open then
+        local f = io.open(marker, "a")
+        if f then
+            f:close()
+        end
+    elseif bmd and bmd.writefile then
+        pcall(bmd.writefile, marker, "")
     end
-end
-
-local function read_file(path)
-    local f = io.open(path, "rb")
-    if not f then
-        return nil
-    end
-    local data = f:read("*a")
-    f:close()
-    return data
-end
-
-local function write_file(path, data)
-    local tmp = path .. ".tmp"
-    local f = io.open(tmp, "wb")
-    if not f then
-        return false
-    end
-    f:write(data)
-    f:close()
-    os.remove(path)
-    return os.rename(tmp, path) ~= nil or write_file_direct(path, data)
-end
-
-function write_file_direct(path, data)
-    local f = io.open(path, "wb")
-    if not f then
-        return false
-    end
-    f:write(data)
-    f:close()
-    return true
 end
 
 -- Minimal JSON (objects, arrays, strings, numbers, bool, null)
