@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- **Edit dress.** Lua/MCP `set_timecode`, `add_transition` (Cross Dissolve when Resolve exposes `TimelineItem.AddTransition`), `set_item_property` (Zoom/Opacity/Pan), and `insert_title` with optional playhead + Fusion `StyledText`.
+- 21.0.4.5 Lite may skip `AddTransition` (added in 21.1). Titles still insert via `InsertFusionTitleIntoTimeline`.
+
 ## 0.2.0 (unreleased)
 
 Visual context awareness, Apple Metal memory controls, and automated draft cut generation.

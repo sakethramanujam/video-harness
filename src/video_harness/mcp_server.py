@@ -194,14 +194,64 @@ def clip_set_color(
 def timeline_insert_title(
     title_name: str = "Text+",
     title_type: str = "fusion",
+    timecode: str | None = None,
+    text: str | None = None,
 ) -> str:
-    """Insert a Title or Fusion Title (e.g. Text+, Text, Lower Third) into the timeline at the current playhead.
+    """Insert a Title or Fusion Title (e.g. Text+, Text, Lower Third) at playhead.
 
-    title_name: Name of the title template, e.g. 'Text+', 'Text', or a Fusion title.
-    title_type: 'fusion' (calls InsertFusionTitleIntoTimeline) or 'standard' (calls InsertTitleIntoTimeline).
+    Optional timecode moves the playhead first. Optional text tries to set Fusion StyledText.
     """
+    params: dict[str, Any] = {"title_name": title_name, "title_type": title_type}
+    if timecode:
+        params["timecode"] = timecode
+    if text:
+        params["text"] = text
     try:
-        return _ok(get_harness().insert_title(title_name=title_name, title_type=title_type))
+        return _ok(get_harness().insert_title(**params))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
+def timeline_set_timecode(timecode: str) -> str:
+    """Move the playhead. Used before inserting a title or generator."""
+    try:
+        return _ok(get_harness().set_timecode(timecode=timecode))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
+def timeline_add_transition(
+    duration: int = 12,
+    transition: str = "Cross Dissolve",
+    unique_ids: list[str] | None = None,
+) -> str:
+    """Add a video transition at each edit (or at unique_ids). Resolve 21.1+; older builds skip."""
+    params: dict[str, Any] = {"duration": duration, "transition": transition}
+    if unique_ids:
+        params["unique_ids"] = unique_ids
+    try:
+        return _ok(get_harness().add_transition(**params))
+    except Exception as exc:
+        return _err(exc)
+
+
+@mcp.tool()
+def timeline_set_item_property(
+    key: str,
+    value: Any,
+    unique_ids: list[str] | None = None,
+    clip_name: str | None = None,
+) -> str:
+    """Set a TimelineItem property (ZoomX, ZoomY, Opacity, Pan, Tilt, …)."""
+    params: dict[str, Any] = {"key": key, "value": value}
+    if unique_ids:
+        params["unique_ids"] = unique_ids
+    if clip_name:
+        params["clip_name"] = clip_name
+    try:
+        return _ok(get_harness().set_item_property(**params))
     except Exception as exc:
         return _err(exc)
 

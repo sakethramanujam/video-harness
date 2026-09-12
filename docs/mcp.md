@@ -44,6 +44,11 @@ Keep Resolve + the Lua bridge running. The MCP process does not start Resolve.
 | `markers_clear` | Delete by id / frame / color (Python runtime only) |
 | `clip_metadata_get` | Pool-item metadata (Python runtime only) |
 | `clip_set_color` | Timeline item clip color (Lua + Python). Empty color clears. |
+| `timeline_insert_title` | Fusion/standard title at playhead; optional `timecode`, `text` |
+| `timeline_insert_generator` | Generator (Solid Color, …) at playhead |
+| `timeline_set_timecode` | Move playhead |
+| `timeline_add_transition` | Cross Dissolve at edits when the API exists (21.1+) |
+| `timeline_set_item_property` | ZoomX/Y, Opacity, Pan, Tilt, … |
 
 Resources: `resolve://status`, `resolve://timeline`, `resolve://types`.
 

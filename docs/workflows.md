@@ -39,6 +39,8 @@ That imports, ensures the timeline, then appends every imported clip on V1 in or
 
 Clip colors (`clip_set_color`) are timeline labels: Orange, Apricot, Yellow, Lime, Olive, Green, Teal, Navy, Blue, Purple, Violet, Pink, Tan, Beige, Brown, Chocolate. Marker names Cyan/Mint/Red map to Teal/Lime/Violet. Color after place, and do not fire several MCP color calls at once — the Lua queue is serial (the client now locks so they wait instead of colliding).
 
+Titles: `timeline_set_timecode` then `timeline_insert_title` (`Text+`, optional `text`). Transitions: `timeline_add_transition` (Cross Dissolve; needs Resolve 21.1+ or clip handles). Motion: `timeline_set_item_property` `ZoomX`/`ZoomY`.
+
 `timeline_place` fields:
 
 | Field | Meaning |

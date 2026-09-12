@@ -73,6 +73,15 @@ class Harness:
     def insert_generator(self, **params: Any) -> dict[str, Any]:
         return self.session.call("insert_generator", params)
 
+    def set_timecode(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("set_timecode", params)
+
+    def add_transition(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("add_transition", params)
+
+    def set_item_property(self, **params: Any) -> dict[str, Any]:
+        return self.session.call("set_item_property", params)
+
     def marker_upsert(self, markers: list[dict[str, Any]] | dict[str, Any]) -> dict[str, Any]:
         if isinstance(markers, dict):
             markers = [markers]

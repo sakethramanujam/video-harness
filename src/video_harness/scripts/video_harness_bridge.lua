@@ -19,6 +19,9 @@ local METHOD_NAMES = {
     "set_clip_color",
     "insert_title",
     "insert_generator",
+    "set_timecode",
+    "add_transition",
+    "set_item_property",
 }
 
 local function home_dir()
@@ -1065,13 +1068,71 @@ local function set_clip_color(r, params)
     return { changed = changed, count = #changed }
 end
 
+local function set_timecode(r, params)
+    local _, _, tl = timeline_of(r)
+    local tc = params.timecode or params.tc
+    if not tc then
+        fail("timecode is required.", "PlacementError")
+    end
+    local ok = tl:SetCurrentTimecode(tostring(tc))
+    return { success = not not ok, timecode = tostring(tc) }
+end
+
+local function _set_fusion_text(item, text)
+    if not item or not text or text == "" then
+        return false
+    end
+    safe(function()
+        item:SetName(text)
+    end)
+    local count = tonumber(safe(function()
+        return item:GetFusionCompCount()
+    end, 0)) or 0
+    if count < 1 then
+        return false
+    end
+    local comp = safe(function()
+        return item:GetFusionCompByIndex(1)
+    end)
+    if not comp then
+        return false
+    end
+    local names = { "Text1", "TextPlus1", "Template", "Title", "Text+" }
+    for _, name in ipairs(names) do
+        local tool = safe(function()
+            return comp:FindTool(name)
+        end)
+        if tool then
+            safe(function()
+                tool.StyledText = text
+            end)
+            return true
+        end
+    end
+    local tools = safe(function()
+        return comp:GetToolList(false)
+    end)
+    if type(tools) == "table" then
+        for _, tool in pairs(tools) do
+            if tool and tool.StyledText ~= nil then
+                safe(function()
+                    tool.StyledText = text
+                end)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function insert_title(r, params)
     local _, _, tl = timeline_of(r)
     local title_type = params.title_type or "text_plus"
     local title_name = params.title_name or params.name or "Text+"
-    local ok = false
+    if params.timecode or params.tc then
+        tl:SetCurrentTimecode(tostring(params.timecode or params.tc))
+    end
     local item = nil
-
     if title_type == "fusion" or title_type == "text_plus" then
         item = safe(function()
             return tl:InsertFusionTitleIntoTimeline(title_name)
@@ -1081,16 +1142,156 @@ local function insert_title(r, params)
             return tl:InsertTitleIntoTimeline(title_name)
         end)
     end
-
     if not item then
         fail("Failed to insert title '" .. tostring(title_name) .. "' into timeline.", "PlacementError")
     end
-
+    local text = params.text or params.styled_text
+    local text_ok = false
+    if text then
+        text_ok = _set_fusion_text(item, text)
+    end
     return {
         success = true,
         title_name = title_name,
         title_type = title_type,
+        text = text or "",
+        text_applied = text_ok,
+        unique_id = sval(safe(function()
+            return item:GetUniqueId()
+        end)),
+        name = sval(safe(function()
+            return item:GetName()
+        end)),
+        start = safe(function()
+            return item:GetStart()
+        end),
+        ["end"] = safe(function()
+            return item:GetEnd()
+        end),
     }
+end
+
+local function add_transition(r, params)
+    local _, _, tl = timeline_of(r)
+    local duration = tonumber(params.duration or params.duration_frames or 12) or 12
+    local ttype = params.transition or params.type or "Cross Dissolve"
+    local unique_ids = params.unique_ids or {}
+    local applied = {}
+    local skipped = {}
+    local tracks = { "video" }
+    if params.audio then
+        tracks[#tracks + 1] = "audio"
+    end
+    for _, track_type in ipairs(tracks) do
+        local count = tonumber(safe(function()
+            return tl:GetTrackCount(track_type)
+        end, 0)) or 0
+        for index = 1, count do
+            local items = safe(function()
+                return tl:GetItemListInTrack(track_type, index)
+            end, {}) or {}
+            local ordered = {}
+            for _, item in pairs(items) do
+                ordered[#ordered + 1] = item
+            end
+            table.sort(ordered, function(a, b)
+                return (tonumber(safe(function()
+                    return a:GetStart()
+                end, 0)) or 0) < (tonumber(safe(function()
+                    return b:GetStart()
+                end, 0)) or 0)
+            end)
+            for i = 1, #ordered - 1 do
+                local item = ordered[i]
+                local uid = sval(safe(function()
+                    return item:GetUniqueId()
+                end))
+                local want = true
+                if #unique_ids > 0 then
+                    want = false
+                    for _, w in ipairs(unique_ids) do
+                        if w == uid then
+                            want = true
+                        end
+                    end
+                end
+                if want then
+                    local ok = safe(function()
+                        if item.AddTransition then
+                            return item:AddTransition({
+                                type = ttype,
+                                category = params.category or "simple",
+                                position = params.position or "end",
+                                alignment = params.alignment or "center",
+                                duration = duration,
+                            })
+                        end
+                        return nil
+                    end)
+                    if ok then
+                        applied[#applied + 1] = { unique_id = uid, transition = ttype, duration = duration }
+                    else
+                        skipped[#skipped + 1] = { unique_id = uid, reason = "AddTransition missing or rejected (need handles / Studio 21.1+)" }
+                    end
+                end
+            end
+        end
+    end
+    return { applied = applied, skipped = skipped, count = #applied }
+end
+
+local function set_item_property(r, params)
+    local _, _, tl = timeline_of(r)
+    local key = params.key or params.property
+    local value = params.value
+    if not key then
+        fail("key is required.", "PlacementError")
+    end
+    local unique_ids = params.unique_ids or {}
+    local clip_name = params.clip_name or params.name
+    local changed = {}
+    for _, track_type in ipairs({ "video", "audio" }) do
+        local count = tonumber(safe(function()
+            return tl:GetTrackCount(track_type)
+        end, 0)) or 0
+        for index = 1, count do
+            local items = safe(function()
+                return tl:GetItemListInTrack(track_type, index)
+            end, {}) or {}
+            for _, item in pairs(items) do
+                local uid = sval(safe(function()
+                    return item:GetUniqueId()
+                end))
+                local iname = sval(safe(function()
+                    return item:GetName()
+                end))
+                local match = false
+                if #unique_ids > 0 then
+                    for _, w in ipairs(unique_ids) do
+                        if w == uid then
+                            match = true
+                        end
+                    end
+                elseif clip_name and clip_name == iname then
+                    match = true
+                elseif #unique_ids == 0 and not clip_name then
+                    match = true
+                end
+                if match then
+                    local ok = safe(function()
+                        return item:SetProperty(key, value)
+                    end)
+                    changed[#changed + 1] = {
+                        unique_id = uid,
+                        name = iname,
+                        key = key,
+                        success = not not ok,
+                    }
+                end
+            end
+        end
+    end
+    return { changed = changed, count = #changed }
 end
 
 local function insert_generator(r, params)
@@ -1120,6 +1321,9 @@ local METHODS = {
     set_clip_color = set_clip_color,
     insert_title = insert_title,
     insert_generator = insert_generator,
+    set_timecode = set_timecode,
+    add_transition = add_transition,
+    set_item_property = set_item_property,
 }
 
 local function dispatch(r, method, params)

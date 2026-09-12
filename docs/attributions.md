@@ -30,6 +30,7 @@ We drive the published scripting surface (`scriptapp`, `MediaPool.ImportMedia`, 
 | Product | [DaVinci Resolve](https://www.blackmagicdesign.com/products/davinciresolve) |
 | Support / downloads | [blackmagicdesign.com/support](https://www.blackmagicdesign.com/support/) |
 | Scripting notes | Bundled with Resolve: `DaVinci Resolve.app/Contents/Resources/Developer/Scripting/` (README and examples). Not copied here. |
+| Title / generator / property APIs | `Timeline.InsertFusionTitleIntoTimeline`, `InsertTitleIntoTimeline`, `InsertGeneratorIntoTimeline`, `TimelineItem.SetProperty` / `GetProperty` (Pan, Tilt, ZoomX/Y, Opacity, …). `TimelineItem.AddTransition` is documented from Resolve 21.1; 21.0.4.5 may return none. |
 | Trademarks | DaVinci Resolve, Fusion, Blackmagic Design, and related marks belong to Blackmagic Design Pty Ltd. |
 
 App Store “Lite” sandboxing (`com.blackmagic-design.DaVinciResolveLite`) is Apple’s and Blackmagic’s packaging, not ours.
