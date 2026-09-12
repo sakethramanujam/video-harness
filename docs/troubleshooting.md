@@ -38,6 +38,14 @@ Headless Lua has **no window**. Open **Workspace → Console** for prints. `doct
 
 Several `fuscript ... video_harness_bridge.lua` PIDs means multiple clicks. They race. Quit extras (or Cmd+Q Resolve) and click **once**.
 
+## Two Resolve apps / idaho missing after “updating”
+
+The App Store app (`/Applications/DaVinci Resolve.app`, Lite) and the website installer (`/Applications/DaVinci Resolve/DaVinci Resolve.app`) are different bundles. The website does not replace the Store app.
+
+Lite projects live in the leftover container `…/Containers/com.blackmagic-design.DaVinciResolveLite/Data/Library/Application Support/Resolve Project Library`. 21.1 uses `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Resolve Project Library`. Copy the `Projects/idaho` folder across (with 21.1 quit) or connect the Lite folder as a disk library in Project Manager.
+
+A leftover Lite **container** is not Lite running. `doctor` `resolve_edition` follows the **live** `Resolve` binary. After removing Lite, click Utility again so Lua writes `~/.config/video-harness/` (real `$HOME`), not the sandbox.
+
 ## Scripts → Edit is the bridge / two `video_harness_bridge` entries
 
 Older `install-bridge` copied the Lua file into **Edit** and **Comp** as well as Utility, so those Scripts menus showed a second copy. Current install keeps it in **Utility** only and deletes the extras. Run `video-harness install-bridge` again if Edit/Comp still list it.

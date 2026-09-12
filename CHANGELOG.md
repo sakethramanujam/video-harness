@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- **Edition from the live binary.** A leftover App Store Lite *container* no longer forces `lite-mas` after you switch to website 21.1. Config and Lua RPC follow real `$HOME/.config/video-harness` on desktop.
+
 ## 0.1.5
 
 - **`apply_lut` empty path clears the node.** Film Looks print cubes (3513DI / 2383) on Rec.709 DJI are the wrong transform and look dead. Native Rec.709 unless the clip is actually log.

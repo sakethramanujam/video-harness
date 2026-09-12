@@ -36,11 +36,11 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     cfg_path = bridge_config_path()
     script_path = resolve_script_dirs()["user"] / "video_harness_bridge.py"
     py = _scripts_python_status()
-    from video_harness.paths import lite_container_data, resolve_script_roots
+    from video_harness.paths import lite_container_data, resolve_edition, resolve_script_roots
 
     report: dict[str, Any] = {
         "video_harness": __version__,
-        "resolve_edition": "lite-mas" if lite_container_data() else "desktop",
+        "resolve_edition": resolve_edition(),
         "script_roots": [str(p) for p in resolve_script_roots() if p.is_dir()],
         "python": sys.version.split()[0],
         "python3home": py["python3home"],

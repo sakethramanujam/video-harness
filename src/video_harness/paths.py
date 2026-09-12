@@ -11,11 +11,69 @@ LITE_BUNDLE_ID = "com.blackmagic-design.DaVinciResolveLite"
 
 
 def lite_container_data() -> Path | None:
-    """Mac App Store Resolve Lite is sandboxed; its HOME is this Data folder."""
+    """Mac App Store Resolve Lite sandbox Data folder, if it still exists on disk."""
     if not sys.platform.startswith("darwin"):
         return None
     path = Path.home() / "Library/Containers" / LITE_BUNDLE_ID / "Data"
     return path if path.is_dir() else None
+
+
+def running_resolve_binary() -> Path | None:
+    """Path of the live Resolve executable, if any."""
+    try:
+        import subprocess
+
+        out = subprocess.check_output(["ps", "-ax", "-o", "pid=,command="], text=True)
+    except Exception:
+        return None
+    for line in out.splitlines():
+        cmd = line.strip()
+        if "/Contents/MacOS/Resolve" not in cmd:
+            continue
+        if "python" in cmd.lower():
+            continue
+        # "  1234 /Applications/.../MacOS/Resolve"
+        parts = cmd.split(None, 1)
+        if len(parts) < 2:
+            continue
+        path = Path(parts[1].split()[0])
+        if path.name == "Resolve":
+            return path
+    return None
+
+
+def resolve_edition() -> str:
+    """lite-mas vs desktop from the *running* app, not a leftover sandbox folder.
+
+    Removing the App Store app leaves the container; 21.1 website install uses real $HOME.
+    """
+    proc = running_resolve_binary()
+    if proc is not None:
+        text = str(proc)
+        if "/DaVinci Resolve/DaVinci Resolve.app/" in text:
+            return "desktop"
+        if text.startswith(str(Path("/Applications/DaVinci Resolve.app/"))):
+            return "lite-mas"
+        if "DaVinciResolveLite" in text:
+            return "lite-mas"
+        return "desktop"
+    lite_app = Path("/Applications/DaVinci Resolve.app")
+    desk_app = Path("/Applications/DaVinci Resolve/DaVinci Resolve.app")
+    lite_is_mas = False
+    if lite_app.is_dir():
+        receipt = lite_app / "Contents/_MASReceipt"
+        plist = lite_app / "Contents/Info.plist"
+        lite_is_mas = receipt.is_dir()
+        if not lite_is_mas and plist.is_file():
+            try:
+                lite_is_mas = LITE_BUNDLE_ID in plist.read_text(errors="ignore")
+            except OSError:
+                pass
+    if desk_app.is_dir() and not lite_is_mas:
+        return "desktop"
+    if lite_is_mas:
+        return "lite-mas"
+    return "desktop"
 
 
 def config_dir() -> Path:
@@ -23,9 +81,11 @@ def config_dir() -> Path:
     if override:
         return Path(override)
     # Lua inside Lite uses $HOME/.config/video-harness where HOME is the container.
-    lite = lite_container_data()
-    if lite is not None:
-        return lite / ".config" / APP_NAME
+    # Only follow that when Lite is actually the running (or only) app.
+    if resolve_edition() == "lite-mas":
+        lite = lite_container_data()
+        if lite is not None:
+            return lite / ".config" / APP_NAME
     if sys.platform.startswith("win"):
         root = os.environ.get("APPDATA") or str(Path.home() / "AppData" / "Roaming")
         return Path(root) / APP_NAME
@@ -51,7 +111,7 @@ def resolve_script_roots() -> list[Path]:
     home = Path.home()
     roots: list[Path] = []
     lite = lite_container_data()
-    if lite is not None:
+    if lite is not None and resolve_edition() == "lite-mas":
         roots.append(lite / "Library/Application Support/Fusion/Scripts")
     if sys.platform.startswith("darwin"):
         roots.append(
