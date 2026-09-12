@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.10
+
+- **21.1 Scripts wait fallback.** If `bmd.wait` is missing, use `os.execute("sleep")` / `os.clock` so the bridge does not exit after one poll.
+
 ## 0.1.9
 
 - **21.1 Lua: `io` may be nil too.** File-queue RPC uses Fusion `bmd.readfile` / `bmd.writefile` when `io` is missing (after `package` was already removed).

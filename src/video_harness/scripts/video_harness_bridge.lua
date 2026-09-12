@@ -1565,22 +1565,60 @@ end
 
 local function coop_wait(seconds)
     -- Must yield to Resolve's UI. Busy-loops get killed; UIManager is Studio-only (19.1+).
+    seconds = tonumber(seconds) or 0.2
     if bmd and bmd.wait then
         bmd.wait(seconds)
         return true
     end
-    if wait then
+    if type(wait) == "function" then
         wait(seconds)
         return true
     end
-    if Wait then
+    if type(Wait) == "function" then
         Wait(seconds)
+        return true
+    end
+    if fusion and fusion.Sleep then
+        pcall(function()
+            fusion:Sleep(seconds)
+        end)
+        return true
+    end
+    if fu and fu.Sleep then
+        pcall(function()
+            fu:Sleep(seconds)
+        end)
+        return true
+    end
+    if os and os.execute then
+        pcall(os.execute, "sleep " .. tostring(seconds))
+        return true
+    end
+    -- Last resort: short clock spin so we do not exit the loop on 21.1 Scripts.
+    if os and os.clock then
+        local deadline = os.clock() + seconds
+        while os.clock() < deadline do
+        end
         return true
     end
     return false
 end
 
 local function run_headless(r, token)
+    log(
+        "env package="
+            .. tostring(package ~= nil)
+            .. " io="
+            .. tostring(io ~= nil)
+            .. " bmd="
+            .. tostring(bmd ~= nil)
+            .. " bmd.readfile="
+            .. tostring(bmd and bmd.readfile ~= nil)
+            .. " bmd.wait="
+            .. tostring(bmd and bmd.wait ~= nil)
+            .. " resolve="
+            .. tostring(r ~= nil)
+    )
     log("headless loop (no UI — UIManager is Studio-only on free Resolve)")
     print("====================================================")
     print("video-harness bridge is RUNNING")
