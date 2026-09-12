@@ -46,9 +46,15 @@ Lite projects live in the leftover container `…/Containers/com.blackmagic-desi
 
 A leftover Lite **container** is not Lite running. `doctor` `resolve_edition` follows the **live** `Resolve` binary. After removing Lite, click Utility again so Lua writes `~/.config/video-harness/` (real `$HOME`), not the sandbox.
 
-## Scripts → Edit is the bridge / two `video_harness_bridge` entries
+## Two `video_harness_bridge` entries in Scripts
 
-Older `install-bridge` copied the Lua file into **Edit** and **Comp** as well as Utility, so those Scripts menus showed a second copy. Current install keeps it in **Utility** only and deletes the extras. Run `video-harness install-bridge` again if Edit/Comp still list it.
+Resolve lists every `.lua` and `.py` it finds in Fusion/Scripts. Duplicates come from:
+
+- **Utility + Edit/Comp** (old installer)
+- **User** `~/Library/Application Support/Blackmagic Design/.../Fusion/Scripts/Utility` **and** **system** `/Library/Application Support/.../Fusion/Scripts/Utility`
+- **`video_harness_bridge.lua` next to `video_harness_bridge.py`** (same stem; 21.1 shows both once Python is visible)
+
+`install-bridge` now plants **one Lua** in the Utility folder for this edition and deletes the extras. Re-run it, then reopen **Workspace → Scripts**. Click only the Lua **Utility** item, once.
 
 ## “You have reached a limitation with DaVinci Resolve”
 

@@ -292,34 +292,63 @@ def _launchctl_python3home() -> str | None:
 
 
 def cmd_install_bridge(args: argparse.Namespace) -> int:
-    dest = resolve_script_dirs()["user"]
-    dest.mkdir(parents=True, exist_ok=True)
-    pkg_scripts = Path(__file__).resolve().parent / "scripts"
-    dest.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(pkg_scripts / "vh_runtime.py", dest / "vh_runtime.py")
-    shutil.copy2(pkg_scripts / "bridge.py", dest / "video_harness_bridge.py")
-    lua_src = pkg_scripts / "video_harness_bridge.lua"
-    copied_lua = []
-    from video_harness.paths import lite_container_data, resolve_script_roots
+    from video_harness.paths import lite_container_data, resolve_edition, resolve_script_roots
 
-    removed_lua: list[str] = []
+    pkg_scripts = Path(__file__).resolve().parent / "scripts"
+    lua_src = pkg_scripts / "video_harness_bridge.lua"
+    copied_lua: list[str] = []
+    removed: list[str] = []
+
+    # One Lua in the Utility folder this edition actually scans. Extra copies
+    # (system /Library, sibling .py with the same stem, Edit/Comp) all show
+    # up as duplicate Workspace → Scripts entries.
+    if resolve_edition() == "lite-mas" and lite_container_data() is not None:
+        utility_targets = [
+            lite_container_data() / "Library/Application Support/Fusion/Scripts/Utility"
+        ]
+    else:
+        utility_targets = [
+            Path.home()
+            / "Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility"
+        ]
+
     if lua_src.is_file():
-        for scripts_root in resolve_script_roots():
-            utility = scripts_root / "Utility"
+        for utility in utility_targets:
             try:
                 utility.mkdir(parents=True, exist_ok=True)
                 target = utility / "video_harness_bridge.lua"
                 shutil.copy2(lua_src, target)
                 copied_lua.append(str(target))
             except OSError:
-                pass
-            # Older installs copied into Edit/Comp and hijacked those Scripts menus.
-            for folder in ("Edit", "Comp", "Color", "Fairlight", "Deliver"):
-                stray = scripts_root / folder / "video_harness_bridge.lua"
+                continue
+
+    stray_roots = list(resolve_script_roots())
+    stray_roots.extend(
+        [
+            Path("/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts"),
+            Path.home()
+            / "Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts",
+        ]
+    )
+    lite = lite_container_data()
+    if lite is not None:
+        stray_roots.append(lite / "Library/Application Support/Fusion/Scripts")
+    keep = {Path(p) for p in copied_lua}
+    for scripts_root in stray_roots:
+        for folder in ("Utility", "Edit", "Comp", "Color", "Fairlight", "Deliver"):
+            folder_path = scripts_root / folder
+            for name in (
+                "video_harness_bridge.lua",
+                "video_harness_bridge.py",
+                "vh_runtime.py",
+            ):
+                stray = folder_path / name
+                if stray in keep:
+                    continue
                 if stray.is_file():
                     try:
                         stray.unlink()
-                        removed_lua.append(str(stray))
+                        removed.append(str(stray))
                     except OSError:
                         continue
 
@@ -336,23 +365,15 @@ def cmd_install_bridge(args: argparse.Namespace) -> int:
     cfg = {"host": "127.0.0.1", "port": port, "token": token, "version": 1}
     cfg_path.write_text(json.dumps(cfg, indent=2) + "\n")
 
-    python_note = None
-    if sys.platform == "darwin":
-        local_py = Path("/usr/local/bin/python3")
-        if not local_py.exists():
-            python_note = (
-                "Resolve on macOS ignores Homebrew PATH. Run `video-harness enable-python`, "
-                "then quit and reopen Resolve so Workspace > Scripts lists .py files."
-            )
+    python_note = (
+        "Only video_harness_bridge.lua is installed into Fusion/Scripts/Utility. "
+        "A sibling .py with the same name would appear as a second Scripts item."
+    )
 
     _print(
         {
-            "installed": [
-                str(dest / "video_harness_bridge.py"),
-                str(dest / "vh_runtime.py"),
-                *copied_lua,
-            ],
-            "removed": removed_lua,
+            "installed": copied_lua,
+            "removed": removed,
             "config": str(cfg_path),
             "port": port,
             "next": [

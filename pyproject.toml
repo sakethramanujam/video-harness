@@ -1,6 +1,6 @@
 [project]
 name = "video-harness"
-version = "0.1.6"
+version = "0.1.7"
 description = "DaVinci Resolve harness and MCP server for timeline placement and typed metadata markers."
 readme = "README.md"
 license = { file = "LICENSE" }

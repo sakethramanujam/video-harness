@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- **One Scripts item.** `install-bridge` copies a single Lua into this edition’s Utility folder and deletes duplicates (system `/Library` copy, `video_harness_bridge.py` / `vh_runtime.py` in Scripts, Edit/Comp leftovers). 21.1 lists every `.lua` and `.py` it finds.
+
 ## 0.1.6
 
 - **Edition from the live binary.** A leftover App Store Lite *container* no longer forces `lite-mas` after you switch to website 21.1. Config and Lua RPC follow real `$HOME/.config/video-harness` on desktop.
