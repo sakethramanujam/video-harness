@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- **`apply_lut` empty path clears the node.** Film Looks print cubes (3513DI / 2383) on Rec.709 DJI are the wrong transform and look dead. Native Rec.709 unless the clip is actually log.
+
 ## 0.1.4
 
 - **Overlay titles and LUTs.** Lua/MCP `overlay_fusion_title` (Fusion Text+ on a clip, for titles *over* establishing shots) and `apply_lut` (`TimelineItem.SetLUT`). Follows Joris Hermans’ Resolve 19 cinematic walkthrough (wide establishes, then closer shots; titles over picture).

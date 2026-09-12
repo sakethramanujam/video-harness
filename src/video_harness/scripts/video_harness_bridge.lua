@@ -1372,10 +1372,11 @@ local function apply_lut(r, params)
     -- TimelineItem.SetLUT(nodeIndex, lutPath). lutPath should be a Resolve-readable .cube.
     local _, _, tl = timeline_of(r)
     local path = params.path or params.lut or params.lut_path
-    local node = tonumber(params.node or params.node_index or 1) or 1
-    if not path or path == "" then
-        fail("path (LUT .cube) is required.", "PlacementError")
+    if path == nil then
+        path = ""
     end
+    local node = tonumber(params.node or params.node_index or 1) or 1
+    -- Empty path clears the node LUT. Do not slap Film Looks cubes on Rec.709 drone.
     local unique_ids = params.unique_ids or {}
     local changed = {}
     for _, track_type in ipairs({ "video" }) do

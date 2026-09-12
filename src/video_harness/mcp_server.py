@@ -279,6 +279,7 @@ def timeline_apply_lut(
     """Apply a .cube LUT to timeline video items (node 1 by default).
 
     path must be Resolve-relative, e.g. 'Film Looks/Rec709 Fujifilm 3513DI D65.cube'.
+    Empty path clears the LUT. Do not use Film Looks print cubes on Rec.709 DJI.
     """
     params: dict[str, Any] = {"path": path, "node": node}
     if unique_ids:
