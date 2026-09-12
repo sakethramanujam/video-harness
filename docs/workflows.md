@@ -39,7 +39,7 @@ That imports, ensures the timeline, then appends every imported clip on V1 in or
 
 Clip colors (`clip_set_color`) are timeline labels: Orange, Apricot, Yellow, Lime, Olive, Green, Teal, Navy, Blue, Purple, Violet, Pink, Tan, Beige, Brown, Chocolate. Marker names Cyan/Mint/Red map to Teal/Lime/Violet. Color after place, and do not fire several MCP color calls at once — the Lua queue is serial (the client now locks so they wait instead of colliding).
 
-Titles: `timeline_set_timecode` then `timeline_insert_title` (`Text+`, optional `text`). **Over picture** (cinematic establishing cards): `timeline_overlay_title`. Transitions: `timeline_add_transition` (Cross Dissolve; needs Resolve 21.1+ or clip handles). Motion: `timeline_set_item_property` `ZoomX`/`ZoomY`. LUT: `timeline_apply_lut` with a Resolve `.cube`.
+Titles: `timeline_set_timecode` then `timeline_insert_title` (`Text+`, optional `text`). **Over picture** (cinematic establishing cards): `timeline_overlay_title`. Transitions: `timeline_add_transition` (Cross Dissolve; needs Resolve 21.1+ or clip handles). Motion: `timeline_set_item_property` `ZoomX`/`ZoomY`. LUT: `timeline_apply_lut` with a **Resolve-relative** `.cube` (e.g. `Film Looks/Rec709 Fujifilm 3513DI D65.cube`). An absolute path inside the `.app` bundle is rejected on Lite.
 
 Cinematic assembly (after [Joris Hermans, Resolve 19](https://www.youtube.com/watch?v=sh5MEb5cX1M)): cull junk; 2–3 wides to set a location; then closer/low shots; titles over those wides; soundtrack on A1 and cut to beats in the UI (this API cannot blade or ripple).
 
