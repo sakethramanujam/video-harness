@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- **21.1 Lua `package` is nil.** Path join no longer uses `package.config`, so the Utility script actually stays running.
+
 ## 0.1.7
 
 - **One Scripts item.** `install-bridge` copies a single Lua into this edition’s Utility folder and deletes duplicates (system `/Library` copy, `video_harness_bridge.py` / `vh_runtime.py` in Scripts, Edit/Comp leftovers). 21.1 lists every `.lua` and `.py` it finds.

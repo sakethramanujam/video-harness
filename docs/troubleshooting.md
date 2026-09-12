@@ -32,6 +32,10 @@ If the `.lua` file still is not listed:
 3. Website build: `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/`.
 4. `.py` files stay hidden until Resolve can exec Python; Lua should still list.
 
+## Clicking the script does nothing on 21.1
+
+Fusion 21.1 can start Lua with **`package` nil**. The bridge used `package.config` for path separators and died immediately (`attempt to index global 'package'`). Current Lua does not touch `package`. Click Utility again after `install-bridge`.
+
 ## Clicking the script does nothing
 
 Headless Lua has **no window**. Open **Workspace → Console** for prints. `doctor` heartbeat `ok: true` means it is running.

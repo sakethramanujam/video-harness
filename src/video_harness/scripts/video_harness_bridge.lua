@@ -31,7 +31,12 @@ local function home_dir()
 end
 
 local function join(a, b)
-    local sep = package.config:sub(1, 1)
+    -- Fusion 21.1 may leave `package` nil; do not use package.config.
+    local sep = "/"
+    local home = os.getenv("HOME") or os.getenv("USERPROFILE") or ""
+    if home:find("\\") or (os.getenv("OS") or ""):find("Windows") then
+        sep = "\\"
+    end
     if a:sub(-1) == sep then
         return a .. b
     end
